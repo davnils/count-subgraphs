@@ -1,9 +1,10 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphviz.hpp>
 
+#include "TestTreeDecomposition.hpp"
 #include "TreeDecomposition.hpp"
 
-int main()
+static void checkDiaz()
 {
   count::undirected_graph_t graph(7);
   enum {A, B, C, D, E, F, G} edge_t;
@@ -18,6 +19,7 @@ int main()
   boost::add_edge(E, F, graph);
   boost::add_edge(E, G, graph);
   boost::add_edge(F, G, graph);
+  boost::add_edge(F, C, graph);
 
   std::vector<std::string> labels = {"a", "b", "c", "d", "e", "f", "g"};
   boost::write_graphviz(std::cout, graph, boost::make_label_writer(&labels[0]));
@@ -25,5 +27,14 @@ int main()
 
   auto result = count::buildTreeDecomposition(graph);
   count::visualizeDecomposition(std::cout, result);
+
+  auto nice = count::convertToNiceDecomposition(result);
+  count::visualizeDecomposition(std::cout, nice.first);
+  std::cout << "Root vertex: " << nice.second << std::endl;
+}
+
+int main()
+{
+  count::test::testBinaryDecomposition(std::cout);
   return 0;
 }
