@@ -37,5 +37,6 @@ int main()
 {
   //count::test::testBinaryDecomposition(std::cout);
   count::test::testNiceTreeDecomposition(std::cout);
+  count::test::testCountHomomorphisms(std::cout);
   return 0;
 }

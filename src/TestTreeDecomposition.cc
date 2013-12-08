@@ -171,4 +171,25 @@ void testNiceTreeDecomposition(std::ostream & os)
   runTests(testCase, "NiceTreeDecomposition", os);
 }
 
+/**
+ *
+ */
+void testCountHomomorphisms(std::ostream & os)
+{
+  const unsigned int SEED = 0xf00d;
+  boost::random::mt19937 gen(SEED);
+
+  auto testCase = [&gen, &os]()
+  {
+    /*auto randomGraph = ::count::test::generateConnectedGraph(gen);
+    auto decomp = buildTreeDecomposition(randomGraph);
+    auto niceTree = convertToNiceDecomposition(decomp);
+
+    assert(isBinaryTree(niceTree.first));
+    assert(isNiceTreeDecomposition(niceTree.first, niceTree.second));*/
+  };
+
+  runTests(testCase, "CountHomomorphisms", os);
+}
+
 } }
