@@ -4,6 +4,7 @@
 #include <boost/random.hpp>
 #include <dlib/graph_utils.h>
 #include <dlib/graph.h>
+#include <functional>
 #include <iostream>
 #include <list>
 #include <queue>
@@ -15,6 +16,7 @@
 namespace count { namespace test {
 
 /**
+ *
  */
 static bool isBinaryTree(const tree_decomp_t & tree)
 {
@@ -36,6 +38,7 @@ static bool isBinaryTree(const tree_decomp_t & tree)
 }
 
 /**
+ *
  */
 static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int root)
 {
@@ -103,34 +106,67 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
 }
 
 /**
+ *
  */
-void testBinaryDecomposition(std::ostream & os)
+static void runTests(std::function<void(void)> testCase, const std::string & title,
+                     std::ostream & os)
 {
-  const unsigned int TESTS = 1000, SEED = 0xf00d;
-
-  boost::random::mt19937 gen(SEED);
+  const unsigned int TESTS = 1000;
 
   for(unsigned int test = 0; test < TESTS; ++test)
   {
     os
       << "----------------NEW TEST-------------------\n"
-      << "Running test #" << test << "\n";
+      << "Running test (" << title << "): #" << test << "\n";
 
-    auto randomGraph = ::count::test::generateConnectedGraph(gen);
-    boost::write_graphviz(os, randomGraph);
-    os << std::endl;
-
-    auto decomposed = buildTreeDecomposition(randomGraph);
-    ::count::visualizeDecomposition(os, decomposed);
-    auto binaryTree = convertToBinaryTree(decomposed);
-    //::count::visualizeDecomposition(os, binaryTree.first);
-
-    assert(isBinaryTree(binaryTree.first));
+    testCase();
 
     os
       << "-------------------------------------------\n"
       << std::endl;
   }
+}
+
+/**
+ *
+ */
+void testBinaryDecomposition(std::ostream & os)
+{
+  const unsigned int SEED = 0xf00d;
+  boost::random::mt19937 gen(SEED);
+
+  auto testCase = [&gen]()
+  {
+    auto randomGraph = ::count::test::generateConnectedGraph(gen);
+    auto decomposed = buildTreeDecomposition(randomGraph);
+    auto binaryTree = convertToBinaryTree(decomposed);
+
+    assert(isBinaryTree(binaryTree.first));
+  };
+
+  runTests(testCase, "BinaryDecomposition", os);
+}
+
+/**
+ *
+ */
+void testNiceTreeDecomposition(std::ostream & os)
+{
+  const unsigned int SEED = 0xf00d;
+  boost::random::mt19937 gen(SEED);
+
+  auto testCase = [&gen]()
+  {
+    auto randomGraph = ::count::test::generateConnectedGraph(gen);
+    auto decomp = buildTreeDecomposition(randomGraph);
+    auto niceTree = convertToNiceDecomposition(decomp);
+    //::count::visualizeDecomposition(os, binaryTree.first);
+
+    assert(isBinaryTree(niceTree.first));
+    assert(isNiceTreeDecomposition(niceTree.first, niceTree.second));
+  };
+
+  runTests(testCase, "NiceTreeDecomposition", os);
 }
 
 } }

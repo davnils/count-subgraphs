@@ -1,7 +1,11 @@
+#include <algorithm>
+#include <boost/graph/copy.hpp>
+#include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/graphviz.hpp>
 #include <dlib/graph_utils.h>
 #include <dlib/graph.h>
 #include <queue>
+#include <vector>
 
 #include "TreeDecomposition.hpp"
 
@@ -171,6 +175,245 @@ std::pair<tree_decomp_t, unsigned int> convertToBinaryTree(const tree_decomp_t &
   return std::make_pair(tree, startVertex);
 }
 
+static std::list<unsigned int> getChildren(const tree_decomp_t & tree,
+                                           const unsigned int vertex,
+                                           const std::vector<bool> & visited)
+{
+  std::list<unsigned int> children;
+  for(auto it = boost::adjacent_vertices(vertex, tree); it.first != it.second;
+  it.first++)
+  {
+    if(!visited.at(*it.first))
+    {
+      children.push_front(*it.first);
+    }
+  }
+  
+  return children;
+}
+
+/**
+ *
+ */
+static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
+                                            const unsigned int root)
+{
+  tree_decomp_t out(inputTree);
+  std::queue<unsigned int> work;
+  std::vector<bool> visited(boost::num_vertices(inputTree), false);
+
+  work.push(root);
+  visited.at(root) = true;
+  while(!work.empty())
+  {
+    auto p = work.front(); work.pop();
+
+    //Split child edges when there are two children available
+    if(boost::out_degree(p, out) == 3 || p == root)
+    {
+      auto splitPath = [&out](unsigned int p, unsigned int child)
+      {
+        auto middle = boost::add_vertex(out[p], out);
+        boost::remove_edge(p, child, out);
+        boost::add_edge(p, middle, out);
+        boost::add_edge(middle, child, out);
+      };
+
+      auto children = getChildren(out, p, visited);
+      auto q = children.front(); children.pop_front();
+      auto r = children.front(); children.pop_front();
+
+      splitPath(p, q);
+      splitPath(p, r);
+
+      work.push(q);
+      work.push(r);
+      visited.at(q) = true;
+      visited.at(r) = true;
+    }
+  }
+
+  return out;
+}
+
+/**
+ *
+ */
+static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
+                                            const unsigned int root)
+{
+  auto replaceWithPath = [](unsigned int p, unsigned int q, tree_decomp_t & tree)
+  {
+    auto size = boost::num_vertices(tree);
+    std::vector<unsigned int> pqIntersect(size), pqDiff(size), qpDiff(size);
+
+    //Build X_P `ìntersect` X_Q, X_P \ X_Q and X_Q \ X_P
+    {
+      decltype(pqIntersect.begin()) last;
+      auto tp = tree[p];
+      auto tq = tree[q];
+
+      last = std::set_intersection(tp.begin(), tp.end(), tq.begin(), tq.end(),
+                                   pqIntersect.begin());
+      pqIntersect.resize(last - pqIntersect.begin());
+
+      last = std::set_difference(tp.begin(), tp.end(), tq.begin(), tq.end(),
+                                 pqDiff.begin());
+      pqDiff.resize(last - pqDiff.begin());
+
+      last = std::set_difference(tq.begin(), tq.end(), tp.begin(), tp.end(),
+                                 qpDiff.begin());
+      qpDiff.resize(last - qpDiff.begin());
+    }
+
+    //Extend p-q edge with path from definition i.e. p - extension - q
+    //Build extension from the middle pq vertex and outwards
+    auto pq = boost::add_vertex(std::set<unsigned int>(pqIntersect.begin(),
+                                pqIntersect.end()), tree);
+    auto buildExtension = [&tree, pq](const std::vector<unsigned int> & addition,
+                                      unsigned int finalVertex)
+    {
+      auto previous = pq;
+      for(auto v : addition)
+      {
+        auto newBag = tree[previous];
+        newBag.insert(v);
+        auto ext = boost::add_vertex(newBag, tree);
+        boost::add_edge(ext, previous, tree);
+        previous = ext;
+      }
+
+      boost::add_edge(previous, finalVertex, tree);
+    };
+
+    buildExtension(pqDiff, p);
+    buildExtension(qpDiff, q);
+  };
+
+  auto contractEdge = [](unsigned int p, unsigned int q, tree_decomp_t & tree)
+  {
+    for(auto it = boost::adjacent_vertices(q, tree); it.first != it.second;
+        ++it.first)
+    {
+      auto next = *it.first;
+      if(next != p)
+      {
+        boost::remove_edge(q, next, tree);
+        boost::add_edge(p, next, tree);
+      }
+    }
+  };
+
+  tree_decomp_t out(inputTree);
+  std::queue<unsigned int> work;
+  std::vector<bool> visited(boost::num_vertices(inputTree), false);
+
+  work.push(root);
+  visited.at(root) = true;
+  while(!work.empty())
+  {
+    auto p = work.front(); work.pop();
+
+    //Process all nodes having one children
+    auto children = getChildren(out, p, visited);
+    if(children.size() != 1)
+    {
+      //Push all children and continue search
+      while(!children.empty())
+      {
+        work.push(children.front());
+        visited.at(children.front()) = true;
+        children.pop_front();
+      }
+      continue;
+    }
+
+    //Check if bags are equal, two different cases
+    auto q = children.front();
+    if(out[p] == out[q])
+    {
+      //Contract p-q edge and reconsider the updated p vertex
+      contractEdge(p, q, out);
+      work.push(p);
+    }
+    else
+    {
+      replaceWithPath(p, q, out);
+      work.push(q);
+      visited.at(q) = true;
+    }
+  }
+
+  //Filter out disconnected vertices
+  class VertexFilter
+  {
+  public:
+    VertexFilter() = default;
+    VertexFilter(tree_decomp_t tree) : m_tree(tree)
+    {
+    }
+
+    bool operator()(const unsigned int vertex) const
+    {
+      return boost::out_degree(vertex, m_tree) > 0;
+    }
+
+  private:
+    tree_decomp_t m_tree;
+  };
+
+  VertexFilter filter(out);
+  boost::filtered_graph<tree_decomp_t, boost::keep_all, VertexFilter>
+    copy(out, boost::keep_all(), filter);
+  tree_decomp_t final;
+  boost::copy_graph(copy, final);
+  return final;
+}
+
+/**
+ *
+ */
+static tree_decomp_t convertToCriteria3(const tree_decomp_t & inputTree,
+                                        const unsigned int root)
+{
+  tree_decomp_t out(inputTree);
+  std::queue<unsigned int> work;
+  std::vector<bool> visited(boost::num_vertices(inputTree), false);
+
+  work.push(root);
+  visited.at(root) = true;
+  while(!work.empty())
+  {
+    auto p = work.front(); work.pop();
+    auto children = getChildren(out, p, visited);
+
+    if(children.empty())
+    {
+      //Extend child vertex with a path
+      //containing decreasing bag sizes
+      unsigned int previous = p;
+      while(out[previous].size() > 1)
+      {
+        auto bag = out[previous];
+        bag.erase(bag.begin());
+        auto next = boost::add_vertex(bag, out);
+        boost::add_edge(previous, next, out);
+        previous = next;
+      }
+    }
+
+    while(!children.empty())
+    {
+      work.push(children.front());
+      visited.at(children.front()) = true;
+      children.pop_front();
+    }
+  }
+
+  return out;
+}
+
+
 /**
  * Converts an existing valid tree decomposition into a nice tree decomposition.
  * A nice tree decomposition satisifies (Bodlaender and Kloks):
@@ -181,9 +424,13 @@ std::pair<tree_decomp_t, unsigned int> convertToBinaryTree(const tree_decomp_t &
  */
 std::pair<tree_decomp_t, unsigned int> convertToNiceDecomposition(const tree_decomp_t & inputTree)
 {
-  auto binaryTree = convertToBinaryTree(inputTree);
-  //TODO
-  return binaryTree;
+  auto tree = convertToBinaryTree(inputTree);
+  auto niceDecomp = convertToCriteria3(
+                      convertToNiceCriteria2(
+                        convertToNiceCriteria1(tree.first, tree.second),
+                        tree.second),
+                      tree.second);
+  return std::make_pair(niceDecomp, tree.second);
 }
 
 void visualizeDecomposition(std::ostream & os, const tree_decomp_t & tree)

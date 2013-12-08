@@ -36,5 +36,6 @@ static void checkDiaz()
 int main()
 {
   count::test::testBinaryDecomposition(std::cout);
+  count::test::testNiceTreeDecomposition(std::cout);
   return 0;
 }

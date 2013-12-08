@@ -5,5 +5,6 @@
 namespace count { namespace test {
 
 void testBinaryDecomposition(std::ostream & os);
+void testNiceTreeDecomposition(std::ostream & os);
 
 } }
