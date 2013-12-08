@@ -4,6 +4,7 @@
 #include <boost/graph/graphviz.hpp>
 #include <dlib/graph_utils.h>
 #include <dlib/graph.h>
+#include <iostream>
 #include <queue>
 #include <vector>
 
@@ -183,9 +184,11 @@ static std::list<unsigned int> getChildren(const tree_decomp_t & tree,
   for(auto it = boost::adjacent_vertices(vertex, tree); it.first != it.second;
   it.first++)
   {
-    if(!visited.at(*it.first))
+    auto neighbour = *it.first;
+    //Ignore any new vertices created after visited
+    if(neighbour < visited.size() && !visited.at(neighbour))
     {
-      children.push_front(*it.first);
+      children.push_front(neighbour);
     }
   }
   
@@ -209,7 +212,8 @@ static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
     auto p = work.front(); work.pop();
 
     //Split child edges when there are two children available
-    if(boost::out_degree(p, out) == 3 || p == root)
+    auto children = getChildren(out, p, visited);
+    if(children.size() == 2)
     {
       auto splitPath = [&out](unsigned int p, unsigned int child)
       {
@@ -219,7 +223,6 @@ static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
         boost::add_edge(middle, child, out);
       };
 
-      auto children = getChildren(out, p, visited);
       auto q = children.front(); children.pop_front();
       auto r = children.front(); children.pop_front();
 
@@ -242,6 +245,7 @@ static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
 static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
                                             const unsigned int root)
 {
+  std::cerr << "[DEBUG] CRITERIA 2" << std::endl;
   auto replaceWithPath = [](unsigned int p, unsigned int q, tree_decomp_t & tree)
   {
     auto size = boost::num_vertices(tree);
@@ -270,8 +274,8 @@ static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
     //Build extension from the middle pq vertex and outwards
     auto pq = boost::add_vertex(std::set<unsigned int>(pqIntersect.begin(),
                                 pqIntersect.end()), tree);
-    auto buildExtension = [&tree, pq](const std::vector<unsigned int> & addition,
-                                      unsigned int finalVertex)
+    auto buildExtension = [&tree, pq]
+      (const std::vector<unsigned int> & addition, unsigned int finalVertex)
     {
       auto previous = pq;
       for(auto v : addition)
@@ -286,6 +290,7 @@ static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
       boost::add_edge(previous, finalVertex, tree);
     };
 
+    boost::remove_edge(p, q, tree);
     buildExtension(pqDiff, p);
     buildExtension(qpDiff, q);
   };
@@ -376,6 +381,7 @@ static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
 static tree_decomp_t convertToCriteria3(const tree_decomp_t & inputTree,
                                         const unsigned int root)
 {
+  std::cerr << "[DEBUG] CRITERIA 3" << std::endl;
   tree_decomp_t out(inputTree);
   std::queue<unsigned int> work;
   std::vector<bool> visited(boost::num_vertices(inputTree), false);

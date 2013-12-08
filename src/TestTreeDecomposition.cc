@@ -155,10 +155,12 @@ void testNiceTreeDecomposition(std::ostream & os)
   const unsigned int SEED = 0xf00d;
   boost::random::mt19937 gen(SEED);
 
-  auto testCase = [&gen]()
+  auto testCase = [&gen, &os]()
   {
     auto randomGraph = ::count::test::generateConnectedGraph(gen);
     auto decomp = buildTreeDecomposition(randomGraph);
+    /*::count::visualizeDecomposition(os, decomp);
+    os << std::endl;*/
     auto niceTree = convertToNiceDecomposition(decomp);
     //::count::visualizeDecomposition(os, binaryTree.first);
 
