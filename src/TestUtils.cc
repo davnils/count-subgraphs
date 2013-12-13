@@ -5,9 +5,9 @@
 #include "TestUtils.hpp"
 #include "TreeDecomposition.hpp"
 
-namespace count { namespace test {
+namespace Count { namespace Test {
 
-undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen)
+Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen)
 {
   auto v = (rand() % 100)+1;
   auto e = (rand() % 100)+1;
@@ -17,7 +17,7 @@ undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen)
   }
 
   //Generate a random graph
-  undirected_graph_t graph;
+  Tree::undirected_graph_t graph;
   boost::generate_random_graph(graph, v, e, gen, false, false);
 
   std::vector<unsigned int> indexToComponent(boost::num_vertices(graph));

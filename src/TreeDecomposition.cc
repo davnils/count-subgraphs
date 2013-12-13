@@ -10,7 +10,7 @@
 
 #include "TreeDecomposition.hpp"
 
-namespace count {
+namespace Tree {
 
 class VertexSetWriter
 {

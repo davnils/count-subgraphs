@@ -6,10 +6,10 @@
 #include "Homomorphism.hpp"
 #include "TreeDecomposition.hpp"
 
-namespace homomorphism {
+namespace Homomorphism {
 
 static std::list<unsigned int> calculateStingyOrdering(
-  const count::tree_decomp_t & tree)
+  const Tree::tree_decomp_t & tree)
 {
   std::list<unsigned int> stingy;
   //TODO
@@ -20,10 +20,10 @@ static std::list<unsigned int> calculateStingyOrdering(
  *
  */
 unsigned long long countHomomorphisms(
-  const count::undirected_graph_t & pattern,
-  const count::tree_decomp_t & decomp,
+  const Tree::undirected_graph_t & pattern,
+  const Tree::tree_decomp_t & decomp,
   const unsigned int root,
-  const count::undirected_graph_t & host)
+  const Tree::undirected_graph_t & host)
 {
   typedef std::map<unsigned int, unsigned int> map_t;
   std::map<unsigned int, std::map<map_t, count_t>> counts;
@@ -78,6 +78,7 @@ unsigned long long countHomomorphisms(
     return diff.at(0);
   };
 
+  //TODO: Verify if "all" strings should be enumerated - homomorphisms only?
   typedef std::function<void(const map_t &)> mappable_t;
   auto generateAllMaps = [&decomp, &nextMap](unsigned int p, mappable_t f)
   {

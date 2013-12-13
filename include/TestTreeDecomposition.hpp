@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace count { namespace test {
+namespace Tree { namespace Test {
 
 void testBinaryDecomposition(std::ostream & os);
 void testNiceTreeDecomposition(std::ostream & os);

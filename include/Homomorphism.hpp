@@ -2,13 +2,13 @@
 
 #include "TreeDecomposition.hpp"
 
-namespace homomorphism {
+namespace Homomorphism {
 
 typedef unsigned long long count_t;
 
-unsigned long long countHomomorphisms(const count::undirected_graph_t &,
-                                      const count::tree_decomp_t &,
+unsigned long long countHomomorphisms(const Tree::undirected_graph_t &,
+                                      const Tree::tree_decomp_t &,
                                       const unsigned int,
-                                      const count::undirected_graph_t &);
+                                      const Tree::undirected_graph_t &);
 
 }

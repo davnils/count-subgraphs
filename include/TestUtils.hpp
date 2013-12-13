@@ -4,8 +4,8 @@
 
 #include "TreeDecomposition.hpp"
 
-namespace count { namespace test {
+namespace Count { namespace Test {
 
-undirected_graph_t generateConnectedGraph(boost::random::mt19937 &);
+Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 &);
 
 } }

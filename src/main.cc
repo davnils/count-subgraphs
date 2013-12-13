@@ -6,7 +6,7 @@
 
 static void checkDiaz()
 {
-  count::undirected_graph_t graph(7);
+  Tree::undirected_graph_t graph(7);
   enum {A, B, C, D, E, F, G} edge_t;
 
   boost::add_edge(A, B, graph);
@@ -25,18 +25,18 @@ static void checkDiaz()
   boost::write_graphviz(std::cout, graph, boost::make_label_writer(&labels[0]));
   std::cout << std::endl;
 
-  auto result = count::buildTreeDecomposition(graph);
-  count::visualizeDecomposition(std::cout, result);
+  auto result = Tree::buildTreeDecomposition(graph);
+  Tree::visualizeDecomposition(std::cout, result);
 
-  auto nice = count::convertToNiceDecomposition(result);
-  count::visualizeDecomposition(std::cout, nice.first);
+  auto nice = Tree::convertToNiceDecomposition(result);
+  Tree::visualizeDecomposition(std::cout, nice.first);
   std::cout << "Root vertex: " << nice.second << std::endl;
 }
 
 int main()
 {
-  //count::test::testBinaryDecomposition(std::cout);
-  count::test::testNiceTreeDecomposition(std::cout);
-  count::test::testCountHomomorphisms(std::cout);
+  //Tree::Test::testBinaryDecomposition(std::cout);
+  Tree::Test::testNiceTreeDecomposition(std::cout);
+  Tree::Test::testCountHomomorphisms(std::cout);
   return 0;
 }

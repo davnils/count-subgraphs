@@ -3,7 +3,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <set>
 
-namespace count {
+namespace Tree {
 
 typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS,
                               std::set<unsigned int>>

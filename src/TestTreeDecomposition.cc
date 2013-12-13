@@ -13,7 +13,7 @@
 #include "TestUtils.hpp"
 #include "TreeDecomposition.hpp"
 
-namespace count { namespace test {
+namespace Tree { namespace Test {
 
 /**
  *
@@ -137,7 +137,7 @@ void testBinaryDecomposition(std::ostream & os)
 
   auto testCase = [&gen]()
   {
-    auto randomGraph = ::count::test::generateConnectedGraph(gen);
+    auto randomGraph = ::Count::Test::generateConnectedGraph(gen);
     auto decomposed = buildTreeDecomposition(randomGraph);
     auto binaryTree = convertToBinaryTree(decomposed);
 
@@ -157,7 +157,7 @@ void testNiceTreeDecomposition(std::ostream & os)
 
   auto testCase = [&gen, &os]()
   {
-    auto randomGraph = ::count::test::generateConnectedGraph(gen);
+    auto randomGraph = ::Count::Test::generateConnectedGraph(gen);
     auto decomp = buildTreeDecomposition(randomGraph);
     /*::count::visualizeDecomposition(os, decomp);
     os << std::endl;*/
