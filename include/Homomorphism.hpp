@@ -8,6 +8,7 @@ typedef unsigned long long count_t;
 
 unsigned long long countHomomorphisms(const count::undirected_graph_t &,
                                       const count::tree_decomp_t &,
+                                      const unsigned int,
                                       const count::undirected_graph_t &);
 
 }
