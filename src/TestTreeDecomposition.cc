@@ -18,7 +18,10 @@ using namespace Count::Test;
 namespace Count { namespace Tree { namespace Test { 
 
 /**
+ * Check if the provided tree is binary.
  *
+ * @param tree Input tree.
+ * @return True if the tree is valid.
  */
 static bool isBinaryTree(const tree_decomp_t & tree)
 {
@@ -40,17 +43,21 @@ static bool isBinaryTree(const tree_decomp_t & tree)
 }
 
 /**
+ * Check if the provided decomposition is nice.
  *
+ * @param tree Input tree.
+ * @param root Root vertex.
+ * @return True if the tree is valid.
  */
 static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int root)
 {
-  //Check invariant 1
+  //check invariant 1
   if(!isBinaryTree(tree))
   {
     return false;
   }
 
-  //Check invariants 2 and 3 by performing a BFS traversal from the root
+  //check invariants 2 and 3 by performing a BFS traversal from the root
   std::vector<bool> visited(boost::num_vertices(tree), false);
   std::queue<unsigned int> work;
 
@@ -72,7 +79,7 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
       }
     }
 
-    //One child case
+    //one child case
     if(childs.size() == 1)
     {
       auto const & c = tree[childs.front()];
@@ -90,7 +97,7 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
       work.push(childs.front());
       visited.at(childs.front()) = true;
     }
-    //Two children case
+    //two children case
     else if(childs.size() == 2)
     {
       auto first = childs.front(); childs.pop_front();
@@ -111,7 +118,9 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
 }
 
 /**
+ * Verify that the processed tree decompositions are binary.
  *
+ * @param os Output stream to be written.
  */
 void testBinaryDecomposition(std::ostream & os)
 {
@@ -131,7 +140,9 @@ void testBinaryDecomposition(std::ostream & os)
 }
 
 /**
+ * Verify that the processed tree decompositions are nice.
  *
+ * @param os Output stream to be written.
  */
 void testNiceTreeDecomposition(std::ostream & os)
 {
