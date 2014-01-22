@@ -13,32 +13,11 @@ namespace Count { namespace Basic { namespace Test {
 using namespace Utils;
 using namespace Count::Test;
 
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto s : map)
-  {
-    os << (char)('a' + s.first)  << ":" << (char)('a' + s.second) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
 /**
+ * Verify the implementation of the L table recurrence, 
+ * by comparing against a naive recursion.
  *
+ * @param os Output stream to be written.
  */
 void testLTable(std::ostream & os)
 {
@@ -87,6 +66,12 @@ void testLTable(std::ostream & os)
   runTests(testCase, "LTable", os);
 }
 
+/**
+ * Retrieve the subset indicated by the markers as a set.
+ *
+ * @param markers Markers indicating the integers to be saved.
+ * @return Set of integers.
+ */
 static std::set<unsigned int> getSubset(const std::vector<bool> & markers)
 {
   auto const vertices = extractSubset(markers);
@@ -94,7 +79,15 @@ static std::set<unsigned int> getSubset(const std::vector<bool> & markers)
 }
 
 /**
+ * Calculate T_p values (as described in the counting paper) by naively
+ * enumerating all subsets.
  *
+ * @param q Size of the subset candidates.
+ * @param n Size of the universe.
+ * @param p Parity value (0 or 1).
+ * @param z Z set.
+ * @param triple Triple containing partial counts.
+ * @return Total sum.
  */
 static long long naiveCalculateTp(
   const unsigned int q,
@@ -152,7 +145,13 @@ static long long naiveCalculateTp(
 }
 
 /**
+ * Naively calculate a specific y value.
  *
+ * @param i The equation index, 0 to e.
+ * @param q Size of the subset candidates.
+ * @param n Size of the universe.
+ * @param triple Triple containing partial counts.
+ * @return Total sum.
  */
 static long long naiveCalculateYi(
   const unsigned int i,
@@ -205,10 +204,6 @@ static long long naiveCalculateYi(
     auto t0 = naiveCalculateTp(q, n, 0, z, triple);
     auto t1 = naiveCalculateTp(q, n, 1, z, triple);
 
-    /*std::cerr << "z=" << z << ", |z|=" << z.size() << std::endl;
-    std::cerr << "t0=" << t0 << ", tpSamples=" << tpSamples.first.at(z.size()).at(z) << std::endl;
-    std::cerr << "t1=" << t1 << ", tpSamples=" << tpSamples.second.at(z.size()).at(z) << std::endl;*/
-
     if(t0 != tpSamples.first.at(z.size()).at(z))
     {
       assert(false);
@@ -227,7 +222,9 @@ static long long naiveCalculateYi(
 
 
 /**
+ * Verify that basic equations solve for the expected injective count.
  *
+ * @param os Output stream to be written.
  */
 void testBasicEquations(std::ostream & os)
 {
@@ -325,10 +322,8 @@ void testBasicEquations(std::ostream & os)
 
       //add up the contribution gathered by solving the system
       auto contrib = Count::solveLinearSystem(A, y).back();
-      std::cerr << "contrib=" << contrib << std::endl;
 
       auto contribRef = Naive::evaluateDisjointTriple(triple, g2, part);
-      std::cerr << "contribRef=" << contribRef << std::endl;
 
       assert(contrib >= 0);
       assert(static_cast<unsigned long>(contrib) == contribRef);

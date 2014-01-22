@@ -54,10 +54,4 @@ std::pair<bool, std::vector<long long>> buildSystem(
   const double
   );
 
-/*matrix_t buildMatrixRepresentation(
-  const std::vector<unsigned int> &,
-  const std::vector<long> &,
-  const unsigned int
-  );*/
-
 } }

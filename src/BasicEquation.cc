@@ -6,45 +6,15 @@ namespace Count { namespace Basic {
 
 using namespace Utils;
 
-/* TODO: REMOVE THESE */
-std::ostream & operator<<(std::ostream & os, const std::vector<unsigned int> & vec)
-{
-  os << " {";
-  for(auto e : vec)
-  {
-    os << (char)('0' + e) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto e : map)
-  {
-    os << (char)('a' + e.first) << " -> " << (char)('a' + e.second) << ", ";
-  }
-  os << "} ";
-
-  return os;
-};
-
 /**
+ * Calculate the intersection transform as defined in the counting paper.
  *
+ * @param n Size of the universe.
+ * @param z Z set.
+ * @param q Size of the subset candidates.
+ * @param t Current intersection size.
+ * @param f Callback to be executed with an accepted subset.
+ * @return Total sum.
  */
 long calculateIntersectionTransform(
   const unsigned int n,
@@ -55,13 +25,6 @@ long calculateIntersectionTransform(
   )
 {
   long sum = 0;
-
-  /*std::cerr << "calculateIntersectionTransform("
-            << "n=" << n << ", "
-            << "z=" << z << ", "
-            << "q=" << q << ", "
-            << "s=" << t << ")"
-            << std::endl;*/
 
   auto aggregate = [&sum, n, &z, f, t](const std::vector<bool> & markers)
   {
@@ -81,7 +44,16 @@ long calculateIntersectionTransform(
 }
 
 /**
+ * Calculate the parity transform as defined in the counting paper,
+ * by calling the intersection transform.
  *
+ * @param n Size of the universe.
+ * @param z Z set.
+ * @param q Size of the subset candidates.
+ * @param s Range of intersection transform.
+ * @param p Parity being evaluated.
+ * @param f Callback to be executed with an accepted subset.
+ * @return Total sum.
  */
 long calculateParityTransform(
   const unsigned int n,
@@ -92,13 +64,6 @@ long calculateParityTransform(
   std::function<long(const std::set<unsigned int> &)> f
   )
 {
-  /*std::cerr << "calculateParityTransform("
-            << "n=" << n << ", "
-            << "z=" << z << ", "
-            << "q=" << q << ", "
-            << "s=" << s << ", "
-            << "p=" << p << ")"
-            << std::endl;*/
   long sum = 0;
 
   for(unsigned int t = 0; t <= s; ++t)
@@ -112,8 +77,13 @@ long calculateParityTransform(
   return sum;
 }
 
+
 /**
+ * Calculate all tuples values as described in the counting paper.
  *
+ * @param n Size of the universe.
+ * @param q Size of the subset candidates.
+ * @return Table of values indexed by i and s.
  */
 std::vector<std::vector<unsigned long long>> calculateAllTuples(
   const unsigned int n,
@@ -152,6 +122,15 @@ std::vector<std::vector<unsigned long long>> calculateAllTuples(
   return output;
 }
 
+/**
+ * Calculate all T_p values as described in the counting paper.
+ *
+ * @param triple Triple containing partial counts.
+ * @param q Size of the subset candidates.
+ * @param n Size of the universe.
+ * @param gamma Gamma parameter value being used.
+ * @return Both parity vectors.
+ */
 std::pair<parity_vec_t, parity_vec_t> buildTpValues(
   const partition_triple_t & triple,
   const unsigned int q,
@@ -163,9 +142,6 @@ std::pair<parity_vec_t, parity_vec_t> buildTpValues(
 
   auto defaultCons = std::make_pair(parity_vec_t(bound+1), parity_vec_t(bound+1));
   parity_t f(defaultCons), g(defaultCons), h(defaultCons);
-
-  //q=1, n=7, s=1
-  //lookup.first.at(1).at({b}) of interest
 
   //evaluate all parity transforms (for all s and p)
   for(unsigned int p = 0; p <= 1; ++p)
@@ -267,7 +243,13 @@ std::pair<parity_vec_t, parity_vec_t> buildTpValues(
 }
 
 /**
+ * Build system of basic equations (y vector).
  *
+ * @param triple Triple containing partial counts.
+ * @param q Size of the subset candidates.
+ * @param n Size of the universe.
+ * @aram gamma Gamma parameter value being used.
+ * @return Vector of y values.
  */
 //TODO: remove first element of pair
 std::pair<bool, std::vector<long long>> buildSystem(
@@ -283,7 +265,7 @@ std::pair<bool, std::vector<long long>> buildSystem(
   //evaluate all L_n
   auto L_n = calculateAllTuples(n, q);
 
-  //Evaluate all y_i
+  //evaluate all y_i
   std::vector<long long> yVec;
   unsigned int bound = std::floor((3/2.0f - gamma)*q);
   for(auto i = 0u; i <= bound; ++i)
