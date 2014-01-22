@@ -1,0 +1,16 @@
+This project is mainly an implementation of a recent result by Björklund, Kaski, and Kowalik [0].
+
+The following has been implemented:
+* Nice tree decompositions, based on join trees in dlib
+* Diaz's algorithm for counting list-colorings (including stingy orderings etc)
+* Fomin's result for counting injective homomorphisms extending some existing
+* Pattern graph partitioning with different acceptance critieria
+* Simple and basic equations generating a linear equation system
+* Solving of linear equation systems based on LU-decomposition in boost
+* Naive methods of counting homomorphisms, injective homomorphisms, and aggregating triples
+
+The included main file simply executes the test suite, which covers all of the implemented functionality.
+
+[0]
+counting thin subgraphs via packings faster than meet-in-the-middle time
+http://epubs.siam.org/doi/abs/10.1137/1.9781611973402.45
