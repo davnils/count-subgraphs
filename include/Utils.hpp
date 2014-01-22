@@ -48,30 +48,33 @@ private:
   bool recurse(
     const Tree::undirected_graph_t &, 
     const unsigned int,
-    const unsigned int);
+    const unsigned int
+    );
 };
 
 std::vector<unsigned int> extractSubset(const std::vector<bool> &);
 
 std::vector<unsigned int> extractSubset(
   const std::vector<bool> &,
-  const std::vector<unsigned int> &);
+  const std::vector<unsigned int> &
+  );
 
 void applyOnSubsets(
   const unsigned int,
   const unsigned int,
-  std::function<void(const std::vector<bool> &)>);
+  std::function<void(const std::vector<bool> &)>
+  );
 
 std::set<unsigned int> mergeSets(
   const std::set<unsigned int> &,
-  const std::set<unsigned int> &);
-
-void visualizeGraph(
-  std::ostream &,
-  const Tree::undirected_graph_t &);
+  const std::set<unsigned int> &
+  );
 
 /**
+ * Extract the keys of a map.
  *
+ * @param map The map.
+ * @return Set of keys.
  */
 template<typename K, typename V> std::set<K> extractKeys(const std::map<K, V> & map)
 {
@@ -84,7 +87,17 @@ template<typename K, typename V> std::set<K> extractKeys(const std::map<K, V> & 
   return keys;
 }
 
-template<typename T> T binomCoefficient(const T & n, const T & k)
+/**
+ * Calculate the bionomial coefficient.
+ *
+ * @param n n in "n choose k".
+ * @param k k in "n choose k".
+ * @return The result.
+ */
+template<typename T> T binomCoefficient(
+  const T & n,
+  const T & k
+  )
 {
   auto factorial = [](T a)
   {
@@ -102,6 +115,13 @@ template<typename T> T binomCoefficient(const T & n, const T & k)
   return factorial(n) / (factorial(n - k) * factorial(k));
 }
 
+/**
+ * Take the intersection of two sets.
+ *
+ * @param a The first set.
+ * @param b The second set.
+ * @return a `intersection` b
+ */
 template<typename T> std::set<T> buildSetIntersection(
   const std::set<T> & a,
   const std::set<T> & b
@@ -118,6 +138,13 @@ template<typename T> std::set<T> buildSetIntersection(
   return std::set<T>(std::begin(output), intersectEnd);
 }
 
+/**
+ * Take the difference of two sets.
+ *
+ * @param a The first set.
+ * @param b The second set.
+ * @return a \ b
+ */
 template<typename T> std::set<T> buildSetDifference(
   const std::set<T> & a,
   const std::set<T> & b
@@ -134,7 +161,14 @@ template<typename T> std::set<T> buildSetDifference(
   return std::set<T>(std::begin(output), differenceEnd);
 }
 
-//TODO: make polymorphic
+/**
+ * Take the symmetric difference of three sets.
+ *
+ * @param a The first set.
+ * @param b The second set.
+ * @param c The third set.
+ * @return a `symdiff` b `symdiff` c
+ */
 template<typename T> std::set<T> calculateSymDiff(
   const std::set<T> & a,
   const std::set<T> & b,
@@ -155,6 +189,13 @@ template<typename T> std::set<T> calculateSymDiff(
   return out;
 }
 
+/**
+ * Take the symmetric difference of two sets.
+ *
+ * @param a The first set.
+ * @param b The second set.
+ * @return a `symdiff` b
+ */
 template<typename T> std::set<T> calculateSymDiff(
   const std::set<T> & a,
   const std::set<T> & b

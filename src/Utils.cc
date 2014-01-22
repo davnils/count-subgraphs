@@ -6,7 +6,9 @@
 namespace Count { namespace Utils {
 
 /**
- * extract integers corresponding to the marked indices
+ * Extract integers corresponding to the marked indices.
+ * @param markers True if the corresponding integer (position) should be included.
+ * @return Vector containing all the integers.
  */
 std::vector<unsigned int> extractSubset(const std::vector<bool> & markers)
 {
@@ -23,11 +25,14 @@ std::vector<unsigned int> extractSubset(const std::vector<bool> & markers)
 }
 
 /**
- * extract integers from vector corresponding to the marked indices
+ * Extract integers corresponding to the marked indices in an array.
+ * @param markers True if the corresponding integer should be included.
+ * @return Vector containing all the integers.
  */
 std::vector<unsigned int> extractSubset(
   const std::vector<bool> & markers,
-  const std::vector<unsigned int> & from)
+  const std::vector<unsigned int> & from
+  )
 {
   std::vector<unsigned int> items;
   for(auto i = 0u; i < markers.size(); ++i)
@@ -42,12 +47,17 @@ std::vector<unsigned int> extractSubset(
 }
 
 /**
- * apply a function on all subsets of length 'length' with 'setCount' bits set
+ * Apply a function on all subsets with size decided by the parameters.
+ *
+ * @param length Total number of elements.
+ * @param setCount Number of elements chosen in each subset.
+ * @param f Function to be called on each subset.
  */
 void applyOnSubsets(
   const unsigned int length,
   const unsigned int setCount,
-  std::function<void(const std::vector<bool> &)> f)
+  std::function<void(const std::vector<bool> &)> f
+  )
 {
   assert(setCount <= length && setCount >= 0);
 
@@ -80,25 +90,17 @@ void applyOnSubsets(
   } while(setCount && gosperNext(subset) && subset < (1ULL << length));
 }
 
-void visualizeGraph(
-  std::ostream & os,
-  const Tree::undirected_graph_t & graph)
-{
-  std::vector<std::string> labels =
-    {"a", "b", "c", "d", "e", "f", "g",
-     "h", "i", "j", "k", "l", "m", "n",
-     "o", "p", "q", "r", "s", "t", "v",
-     "w", "x", "y",  "z"};
-  boost::write_graphviz(os, graph, boost::make_label_writer(&labels[0]));
-  os << std::endl;
-}
-
 /**
+ * Take the union of two sets.
  *
+ * @param s1 The first set.
+ * @param s2 The second set.
+ * @return s1 `union` s2
  */
 std::set<unsigned int> mergeSets(
   const std::set<unsigned int> & s1,
-  const std::set<unsigned int> & s2)
+  const std::set<unsigned int> & s2
+  )
 {
   std::set<unsigned int> copy(s1);
   copy.insert(std::begin(s2), std::end(s2));
@@ -106,7 +108,9 @@ std::set<unsigned int> mergeSets(
 };
 
 /**
+ * Constructor accepting the graph to be partitioned.
  *
+ * @param graph The input graph.
  */
 PatternPartition::PatternPartition(
   const Tree::undirected_graph_t & graph
@@ -123,7 +127,11 @@ PatternPartition::PatternPartition(
 }
 
 /**
+ * Constructor accepting the graph to be partitioned and a predicate
+ * which defines when a candidate partition is accepted.
  *
+ * @param graph The input graph.
+ * @param f Predicate defining termination.
  */
 PatternPartition::PatternPartition(
   const Tree::undirected_graph_t & graph,
@@ -134,7 +142,9 @@ PatternPartition::PatternPartition(
 }
 
 /**
+ * Calculate a 5-partition of the given graph.
  *
+ * @param graph The input graph.
  */
 void PatternPartition::initialize(const Tree::undirected_graph_t & graph)
 {
@@ -151,19 +161,24 @@ void PatternPartition::initialize(const Tree::undirected_graph_t & graph)
 }
 
 /**
+ * Recursive procedure deciding if there is some 5-partition
+ * accepted by the predicate.
  *
- * invariant: {L, S, M, T, R} always contains a valid (partial) partitioning.
+ * @param graph The input graph.
+ * @param pw The maximum pathwidth to be used.
+ * @param currentVertex The vertex to be considered, or |G|.
+ * @return True if the predicate accepted a partition.
  */
 bool PatternPartition::recurse(
   const Tree::undirected_graph_t & graph, 
   const unsigned int pw,
-  const unsigned int currentVertex)
+  const unsigned int currentVertex
+  )
 {
   //Base case: all vertices have been assigned successfully
   if(currentVertex == boost::num_vertices(graph))
   {
-    //TODO: Analyze if needed
-    return accept(this);//S.size() && T.size();
+    return accept(this);
   }
 
   //evaluate a candidate placement

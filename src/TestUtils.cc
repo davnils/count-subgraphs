@@ -8,9 +8,15 @@
 namespace Count { namespace Test {
 
 /**
+ * Generate a connected graph of an approximate maximum size (number of vertices).
  *
+ * @param gen Number generator to be used.
+ * @param maxSize Approximate maximum number of vertices.
  */
-Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen, unsigned int maxSize)
+Tree::undirected_graph_t generateConnectedGraph(
+  boost::random::mt19937 & gen,
+  const unsigned int maxSize
+  )
 {
   assert(maxSize >= 1);
 
@@ -44,10 +50,17 @@ Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen, un
 }
 
 /**
+ * Execute a test case with the given description.
  *
+ * @param testCase Test to be called.
+ * @param title Title of the test.
+ * @param os Output stream to be written.
  */
-void runTests(std::function<void(void)> testCase, const std::string & title,
-              std::ostream & os)
+void runTests(
+  std::function<void(void)> testCase,
+  const std::string & title,
+  std::ostream & os
+  )
 {
   const unsigned int TESTS = 100;
 
