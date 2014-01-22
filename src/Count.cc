@@ -1,4 +1,3 @@
-#include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 #include <map>
 #include <set>
@@ -16,47 +15,20 @@ namespace Count {
 
 using namespace Utils;
 
-std::ostream & operator<<(std::ostream & os, const std::vector<bool> & vec)
-{
-  os << " {";
-  for(auto e : vec)
-  {
-    os << (char)('0' + e) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto e : map)
-  {
-    os << (char)('a' + e.first) << " -> " << (char)('a' + e.second) << ", ";
-  }
-  os << "} ";
-
-  return os;
-};
-
 /**
+ * Update the indices of an homomorphism based on the provided maps.
  *
+ * @param prev The old homomorphism.
+ * @param indices Map from old to new vertex, or -1 if excluded.
+ * @param sourceMap Flag indicating if the update is performed on
+ *                  source (true) or target (false) vertices.
+ * @return Homomorphism with updated indices.
  */
 static inj_homo_t updateHomoIndexing(
-  const inj_homo_t & prev, const std::vector<int> & indices, bool sourceMap)
+  const inj_homo_t & prev,
+  const std::vector<int> & indices,
+  bool sourceMap
+  )
 {
   //update homomorphism with the new subgraph indexing, skip any excluded vertices
   inj_homo_t updated; 
@@ -83,45 +55,33 @@ static inj_homo_t updateHomoIndexing(
   return updated;
 }
 
-//bool debug = false;
-
 
 /**
- * counts the number of injective homomorphisms extending the supplied inj. homo.,
- * for all subsets of size |pattern| - |assigned|
+ * Count the number of injective homomorphisms extending the supplied inj. homo.,
+ * for all subsets of size |pattern| - |assigned|.
+ * Corresponds to the result by Fomin.
+ *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @param excluded Set of excluded vertices (drawn from host graph).
+ * @param homo Existing injective homomorphism.
+ * @return Map from subsets to the corresponding count.
  */
 std::map<std::set<unsigned int>, unsigned long> countInjective(
   const Tree::undirected_graph_t & pattern,
   const Tree::undirected_graph_t & host,
   const std::set<unsigned int> & excluded,
-  const inj_homo_t & homo)
+  const inj_homo_t & homo
+  )
 {
-  /*std::cerr << "considering a given map of a candidate phi" << std::endl;
-  std::cerr << "|P| = " << boost::num_vertices(pattern) << ", |H| = " << boost::num_vertices(host)
-            << ", provided homomorphism: " << homo << std::endl;*/
-
-  //Build tree decomposition of pattern graph
+  //build tree decomposition of pattern graph
   auto decomp = Tree::convertToNiceDecomposition(Tree::buildTreeDecomposition(pattern));
-
-  /*if(debug)
-  {
-    std::cerr << "------------------------------------------" << std::endl;
-    std::cerr << "pattern graph" << std::endl;
-    visualizeGraph(std::cerr, pattern);
-    std::cerr << "host graph" << std::endl;
-    visualizeGraph(std::cerr, host);
-    std::cerr << "generated decomposition" << std::endl;
-    Tree::visualizeDecomposition(std::cerr, decomp.first);
-    std::cerr << "homo=" << homo << std::endl;
-  }*/
 
   std::set<unsigned int> homoMappedSubset;
   for(auto const & entry : homo)
   {
     homoMappedSubset.insert(entry.second);
   }
-
-  //std::cerr << "size of homoMapped: " << homoMappedSubset.size() << std::endl;
 
   //extract all host vertices not yet included
   std::vector<unsigned int> freeVertices;
@@ -148,26 +108,12 @@ std::map<std::set<unsigned int>, unsigned long> countInjective(
 
     auto subHomo = updateHomoIndexing(homo, subResult.second, false);
 
-    //std::cerr << ">>>>>>>>>>>>>>>>>>>> considering a single homomorphism " << std::endl;
-    //std::cerr << "homo: " << homo << std::endl;
-    //std::cerr << "subHomo: " << subHomo << std::endl;
-
-    /*std::cerr << "HOST GRAPH" << std::endl;
-    visualizeGraph(std::cerr, subResult.first);
-    std::cerr << "PATTERN GRAPH" << std::endl;
-    visualizeGraph(std::cerr, pattern);
-    std::cerr << "DECOMPOSITION GRAPH (r=" << decomp.second << ")" << std::endl;
-    Tree::visualizeDecomposition(std::cerr, decomp.first);*/
-
-    //std::cerr << "calling count()" << std::endl;
     auto result = Homomorphism::countHomomorphisms(pattern,
                                                    decomp.first,
                                                    decomp.second,
                                                    subResult.first,
                                                    subHomo);
 
-    /*std::cerr << "(homo) writing injcount[" << vertexSet << "] = " << result
-              << std::endl;*/
     homoCount[vertexSet] = result;
   };
 
@@ -177,14 +123,10 @@ std::map<std::set<unsigned int>, unsigned long> countInjective(
   //number of available vertices in the host graph
   auto const hostSetSize = freeVertices.size();
 
-  //std::cerr << ">>>>> iterating over all subsets of size at most " << maxLength << std::endl;
   for(auto length = 0u; length <= maxLength; ++length)
   {
-    //std::cerr << "evaluating length=" << length << std::endl;
     applyOnSubsets(hostSetSize, length, evaluateHomomorphisms);
   }
-
-  //std::cerr << "entering the second phase" << std::endl;
 
   //accumulate all values (using naive zeta transform), with -1 coefficient applied
   std::map<std::set<unsigned int>, unsigned long> injCount;
@@ -203,13 +145,9 @@ std::map<std::set<unsigned int>, unsigned long> countInjective(
       (const std::vector<bool> & subset)
     {
       auto subsetVertices = extractSubset(subset, vertices);
-      //std::cerr << "coeff= -1 ^ " << maxLength << " - " << subsetVertices.size() << std::endl; 
       long coeff = std::pow(-1, (long)(maxLength - subsetVertices.size()));
       auto term = homoCount[std::set<unsigned int>(std::begin(subsetVertices),
                                                    std::end(subsetVertices))];
-      /*std::cerr << "adding subset: "
-                << std::set<unsigned int>(std::begin(subsetVertices), std::end(subsetVertices))
-                << "(" << coeff << " * " << term << ")" << std::endl;*/
       count += coeff * (long)term;
     };
 
@@ -221,18 +159,16 @@ std::map<std::set<unsigned int>, unsigned long> countInjective(
 
     auto vertexSet = std::set<unsigned int>(std::begin(vertices), std::end(vertices));
 
-    //take the provided injective homomorphism into account <- should it be here? TODO
+    //take the provided injective homomorphism into account
     if(vertexSet.empty())
     {
       count = 1;
     }
 
-    //std::cerr << "injcount[" << vertexSet << "] = " << count << std::endl;
     assert(count >= 0);
     injCount[vertexSet] = (unsigned long)count;
   };
 
-  //std::cerr << ">>>>>>> enumerating all full-sized subsets" << std::endl;
   //enumerate all subsets Q of V(H) \ phi(assigned), of size exactly |P| - |a|
   applyOnSubsets(hostSetSize, maxLength, evaluateZetaTransform);
 
@@ -241,7 +177,11 @@ std::map<std::set<unsigned int>, unsigned long> countInjective(
 }
 
 /**
+ * Count the number of injective homomorphisms between different subgraphs.
  *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @return Struct containing counts and partitioning.
  */
 subgraph_result countSubgraphTriples(
   const Tree::undirected_graph_t & pattern,
@@ -254,7 +194,12 @@ subgraph_result countSubgraphTriples(
 }
 
 /**
+ * Count the number of injective homomorphisms between different subgraphs.
  *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @param givenPartition Partition to be used.
+ * @return Struct containing counts and partitioning.
  */
 subgraph_result countSubgraphTriples(
   const Tree::undirected_graph_t & pattern,
@@ -327,55 +272,42 @@ subgraph_result countSubgraphTriples(
 
     //P[L `union` S] -> H[A `union` phi(S)]
     {
-      /*std::cerr << "P[L `union` S] -> H[A `union` phi(S)] with s="
-                << homo.at(*partition.S.begin()) << " and t="
-                << homo.at(*partition.T.begin()) << std::endl;*/
-      //Only keep vertices from S
+      //only keep vertices from S
       auto patternFilter = mergeSets(subResults.part.L, subResults.part.S);
 
-      //Consider the pattern subgraph
+      //consider the pattern subgraph
       auto subPattern = InducedGraph::buildInducedSubGraphTagged<Tree::undirected_graph_t>(pattern, patternFilter);
       auto subHomo = updateHomoIndexing(homo, subPattern.second, true);
-      subResults.counts[homo].f = countInjective(subPattern.first, host, mapVertices(homo, subResults.part.T), filterHomo(subHomo, updateIndices(subPattern.second, subResults.part.S)));
+      subResults.counts[homo].f =
+        countInjective(subPattern.first,
+                       host,
+                       mapVertices(homo, subResults.part.T),
+                       filterHomo(subHomo, updateIndices(subPattern.second, subResults.part.S)));
     }
 
     //P[S `union` M `union` T] -> H[phi(S) `union` B `union` phi(T)]
     {
-      /*std::cerr << "P[S `union` M `union` T] -> H[phi(S) `union` B `union` phi(T)] with s="
-                << homo.at(*partition.S.begin()) << " (" << partition.S << ") and m="
-                << mVar << " and t="
-                << homo.at(*partition.T.begin()) << " (" << partition.T << ")" << std::endl;*/
-      //Consider the pattern subgraph
+      //consider the pattern subgraph
       auto patternFilter = mergeSets(subResults.part.S, mergeSets(subResults.part.M, subResults.part.T));
-      //std::cerr << partition.S << " " << partition.M << " " << partition.T << std::endl;
       auto subPattern = InducedGraph::buildInducedSubGraphTagged<Tree::undirected_graph_t>(pattern, patternFilter);
       auto subHomo = updateHomoIndexing(homo, subPattern.second, true);
       std::set<unsigned int> emptySet;
-
-      /*if(homo.count('c' - 'a') && homo.count('f' - 'a') && homo.count('b' - 'a') &&
-         homo.at('c' - 'a') == ('d' - 'a') && homo.at('f' - 'a') == ('f' - 'a') && homo.at('b' - 'a') == ('b' - 'a'))
-      {
-        debug = true;
-      }*/
-
       subResults.counts[homo].g = countInjective(subPattern.first, host, emptySet, subHomo);
-
-      //debug = false;
     }
 
     //P[R `union` T] -> H[C `union` phi(T)]
     {
-      /*std::cerr << "P[R `union` T] -> H[C `union` phi(T)] with phi(s)="
-                << homo.at(*partition.S.begin()) << " and r="
-                << rVar << " and phi(t)="
-                << homo.at(*partition.T.begin()) << std::endl;*/
-      //Only keep vertices from T
+      //only keep vertices from T
       auto patternFilter = mergeSets(subResults.part.R, subResults.part.T);
 
-      //Consider the pattern subgraph
+      //consider the pattern subgraph
       auto subPattern = InducedGraph::buildInducedSubGraphTagged<Tree::undirected_graph_t>(pattern, patternFilter);
       auto subHomo = updateHomoIndexing(homo, subPattern.second, true);
-      subResults.counts[homo].h = countInjective(subPattern.first, host, mapVertices(homo, subResults.part.S), filterHomo(subHomo, updateIndices(subPattern.second, subResults.part.T)));
+      subResults.counts[homo].h =
+        countInjective(subPattern.first,
+                       host,
+                       mapVertices(homo, subResults.part.S),
+                       filterHomo(subHomo, updateIndices(subPattern.second, subResults.part.T)));
     }
   };
 
@@ -385,7 +317,6 @@ subgraph_result countSubgraphTriples(
     [&evaluateInjectiveHomomorphism, &host, &pattern, &subResults]
     (const std::vector<bool> & candidateIndices)
   {
-    //std::cerr << "evaluateCandidate()" << std::endl;
     auto hostVertices = extractSubset(candidateIndices);
 
     std::vector<unsigned int> patternVertices(std::begin(subResults.part.S), std::end(subResults.part.S));
@@ -424,7 +355,12 @@ subgraph_result countSubgraphTriples(
 }
 
 /**
+ * Calculate an entry in the A matrix based on row and column.
  *
+ * @param n Total dimension.
+ * @param i Row.
+ * @param j Column.
+ * @return The corresponding coefficient.
  */
 long getCoefficient(
   const unsigned int n,
@@ -436,7 +372,11 @@ long getCoefficient(
 }
 
 /**
+ * Solve an integer linear equation system on the format Ax=y.
  *
+ * @param A A matrix.
+ * @param y y vector.
+ * @return Vector containing solutions to all indeterminates.
  */
 std::vector<int> solveLinearSystem(
   const boost::numeric::ublas::matrix<int> & A,
@@ -466,18 +406,14 @@ std::vector<int> solveLinearSystem(
   return solutions;
 }
 
-void printMatrix(std::ostream & os, const matrix_t & m)
-{
-  for(auto i = 0u; i < m.size1(); ++i)
-  {
-    for(auto j = 0u; j < m.size2(); ++j)
-    {
-      os << m(i, j) << " ";
-    }
-    os << std::endl;
-  }
-}
-
+/**
+ * Build a linear equation system based on triples calculated beforehand.
+ *
+ * @param n Number of host vertices.
+ * @param q Size of subsets being surveyed, typically |P| = 3q.
+ * @param triple Triples containing injective counts for various subgraphs.
+ * @return A and y matrices, from Ax = y.
+ */
 std::pair<matrix_t, matrix_t> buildSystem(
   const unsigned int n,
   const unsigned int q,
@@ -503,6 +439,7 @@ std::pair<matrix_t, matrix_t> buildSystem(
     }
   }
 
+  //build matrices from basic equations
   for(auto i = 0u; i < d; ++i)
   {
     for(auto j = 0u; j < indeterminates.size(); ++j)
@@ -514,6 +451,7 @@ std::pair<matrix_t, matrix_t> buildSystem(
     y(i, 0) = equations.second.at(i);
   }
 
+  //optionally, solve indeterminates and add them to the system
   auto solved = Simple::solveIndeterminates(triple, q, n, e - d, gamma);
   for(auto i = 0u; i < e - d; ++i)
   {
@@ -521,14 +459,18 @@ std::pair<matrix_t, matrix_t> buildSystem(
     y(d + i, 0) = solved.at(i);
   }
 
-  /*std::cerr << ">>> A:" << std::endl;
-  printMatrix(std::cerr, A);
-  std::cerr << ">>> y:" << std::endl;
-  printMatrix(std::cerr, y);*/
-
   return std::make_pair(A, y);
 }
 
+/**
+ * Count the number of subgraphs isomorphic to the pattern graph.
+ * Limited to pattern graphs admitting an even 5-partitioning, 
+ * where the size of L, M, and R, equals.
+ *
+ * @param pattern bla.
+ * @param host bla.
+ * @return Boolean flag indicating success and the count.
+ */
 std::pair<bool, unsigned long long> countIsoSubgraphs(
   const Tree::undirected_graph_t & pattern,
   const Tree::undirected_graph_t & host
@@ -537,7 +479,7 @@ std::pair<bool, unsigned long long> countIsoSubgraphs(
   //parameter controlling the balance between basic and simple equations
   const double gamma = 0.5;
 
-  //build 5-partition
+  //build 5-partitioning
   auto predicate = 
     []
     (PatternPartition * p)

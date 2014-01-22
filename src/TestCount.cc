@@ -16,7 +16,11 @@ namespace Count { namespace Test {
 using namespace Utils;
 
 /**
+ * Verify the injective homomorphism counting procedure.
+ * This is done by comparing against the naive implementation
+ * and counting automorphisms.
  *
+ * @param os Output stream to be written.
  */
 void testCountInjective(std::ostream & os)
 {
@@ -57,14 +61,6 @@ void testCountInjective(std::ostream & os)
        << "Count::countInjective(): auto " << autoCount << std::endl
        << "Naive::countInjective(): auto " << autoRef   << std::endl;
 
-    ////////////
-    /*os << ">>>>>>>>> HOST GRAPH >>>>>>>>>>>" << std::endl;
-    visualizeGraph(os, g2);
-
-    os << ">>>>>>>>> PATTERN GRAPH >>>>>>>>>>>" << std::endl;
-    visualizeGraph(os, g1);*/
-    ////////////
-
     assert(injectSum == injectRef);
     assert(autoCount == autoRef);
     assert(injectSum % autoCount == 0);
@@ -74,7 +70,10 @@ void testCountInjective(std::ostream & os)
 }
 
 /**
+ * Verify that graph partitioning produces correct partitions, as
+ * described in the counting paper.
  *
+ * @param os Output stream to be written.
  */
 void testPartitionGraph(std::ostream & os)
 {
@@ -125,20 +124,11 @@ void testPartitionGraph(std::ostream & os)
   runTests(testCase, "PartitionGraph", os);
 }
 
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
 /**
+ * Verify counting injective homomorphisms using disjoint triples.
+ * These are aggregated in a naive way and compared against a reference.
  *
+ * @param os Output stream to be written.
  */
 void testCountInjectiveTriples(std::ostream & os)
 {
@@ -178,11 +168,11 @@ void testCountInjectiveTriples(std::ostream & os)
     }
 
     os
-      << "|L| = " << part.L.size() << part.L << std::endl
-      << "|S| = " << part.S.size() << part.S << std::endl
-      << "|M| = " << part.M.size() << part.M << std::endl
-      << "|T| = " << part.T.size() << part.T << std::endl
-      << "|R| = " << part.R.size() << part.R << std::endl
+      << "|L| = " << part.L.size() << std::endl
+      << "|S| = " << part.S.size() << std::endl
+      << "|M| = " << part.M.size() << std::endl
+      << "|T| = " << part.T.size() << std::endl
+      << "|R| = " << part.R.size() << std::endl
       << "pw  = " << part.getPathWidth() << std::endl;
 
     auto injectRef = Naive::countInjective(g1,  g2);
@@ -199,7 +189,9 @@ void testCountInjectiveTriples(std::ostream & os)
 }
 
 /**
+ * Verify counting injective homomorphisms on a specific path.
  *
+ * @param os Output stream to be written.
  */
 void testCountInjectiveTriplesPath(std::ostream & os)
 {
@@ -212,15 +204,9 @@ void testCountInjectiveTriplesPath(std::ostream & os)
 
     boost::add_edge(0, 1, g1);
     boost::add_edge(1, 2, g1);
-    //boost::add_edge(2, 3, g1);
-    //boost::add_edge(3, 4, g1);
-    //boost::add_edge(4, 5, g1);
 
     boost::add_edge(0, 1, g2);
     boost::add_edge(1, 2, g2);
-    //boost::add_edge(2, 3, g2);
-    //boost::add_edge(3, 4, g2);
-    //boost::add_edge(4, 5, g2);
 
     os << "|H| = " << boost::num_vertices(g2) << ", "
        << "|P| = " << boost::num_vertices(g1) << std::endl;
@@ -228,20 +214,12 @@ void testCountInjectiveTriplesPath(std::ostream & os)
     PatternPartition part(g1);
 
     os
-      << "|L| = " << part.L.size() << part.L << std::endl
-      << "|S| = " << part.S.size() << part.S << std::endl
-      << "|M| = " << part.M.size() << part.M << std::endl
-      << "|T| = " << part.T.size() << part.T << std::endl
-      << "|R| = " << part.R.size() << part.R << std::endl
+      << "|L| = " << part.L.size() << std::endl
+      << "|S| = " << part.S.size() << std::endl
+      << "|M| = " << part.M.size() << std::endl
+      << "|T| = " << part.T.size() << std::endl
+      << "|R| = " << part.R.size() << std::endl
       << "pw  = " << part.getPathWidth() << std::endl;
-
-    ////////////
-    /*os << ">>>>>>>>> HOST GRAPH >>>>>>>>>>>" << std::endl;
-    visualizeGraph(os, g2);
-
-    os << ">>>>>>>>> PATTERN GRAPH >>>>>>>>>>>" << std::endl;
-    visualizeGraph(os, g1);*/
-    ////////////
 
     auto injectRef = Naive::countInjective(g1,  g2);
     auto subResults = countSubgraphTriples(g1, g2);
@@ -257,7 +235,9 @@ void testCountInjectiveTriplesPath(std::ostream & os)
 }
 
 /**
+ * Verify counting injective homomorphisms on k-paths.
  *
+ * @param os Output stream to be written.
  */
 void testCountInjectiveTriplesKPath(std::ostream & os)
 {
@@ -295,11 +275,11 @@ void testCountInjectiveTriplesKPath(std::ostream & os)
     }
 
     os
-      << "|L| = " << part.L.size() << part.L << std::endl
-      << "|S| = " << part.S.size() << part.S << std::endl
-      << "|M| = " << part.M.size() << part.M << std::endl
-      << "|T| = " << part.T.size() << part.T << std::endl
-      << "|R| = " << part.R.size() << part.R << std::endl
+      << "|L| = " << part.L.size() << std::endl
+      << "|S| = " << part.S.size() << std::endl
+      << "|M| = " << part.M.size() << std::endl
+      << "|T| = " << part.T.size() << std::endl
+      << "|R| = " << part.R.size() << std::endl
       << "pw  = " << part.getPathWidth() << std::endl;
 
     auto injectRef = Naive::countInjective(g1,  g2);
@@ -316,7 +296,11 @@ void testCountInjectiveTriplesKPath(std::ostream & os)
 }
 
 /**
+ * Verify counting subgraph isomorphisms.
+ * Compared against a reference by counting in a naive fashion.
+ * Note that invalid partitions are simply skipped.
  *
+ * @param os Output stream to be written.
  */
 void testCountIsoSubgraphs(std::ostream & os)
 {
