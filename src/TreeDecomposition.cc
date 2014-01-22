@@ -14,36 +14,12 @@
 
 namespace Count { namespace Tree {
 
-class VertexSetWriter
-{
-public:
-  VertexSetWriter(const tree_decomp_t & t)
-    : m_tree(t)
-  {
-  }
-
-  template <typename Item>
-  void operator()(std::ostream & os, const Item & v) const
-  {
-    os << "[label=\"{";
-    bool first = true;
-    for(auto u : m_tree[v])
-    {
-      if(!first)
-      {
-        os << ",";
-      }
-      first = false;
-
-      os << (char)(u + 'a');
-    }
-    os <<  "}\"]";
-  }
-
-private:
-  const tree_decomp_t & m_tree;
-};
-
+/**
+ * Decompose a component of an undirected graph.
+ *
+ * @param inputGraph Graph containing a single component.
+ * @return The resulting tree decomposition.
+ */
 static tree_decomp_t decomposeComponent(const undirected_graph_t & inputGraph)
 {
   dlib::graph<int>::kernel_1a_c inputTransformed;
@@ -83,7 +59,11 @@ static tree_decomp_t decomposeComponent(const undirected_graph_t & inputGraph)
 }
 
 /**
- * .
+ * Build a tree decomposition of an undirected simple graph.
+ * Multiple components are handled by joining the decompositions.
+ *
+ * @param inputGraph Graph to be decomposed.
+ * @return The resulting tree decomposition.
  */
 tree_decomp_t buildTreeDecomposition(const undirected_graph_t & inputGraph)
 {
@@ -181,10 +161,19 @@ tree_decomp_t buildTreeDecomposition(const undirected_graph_t & inputGraph)
 
 
 /**
- * .
+ * Moves a subtree based on a source edge to some other vertex.
+ *
+ * @param tree Tree to be processed.
+ * @param vertex Vertex originally connected with the subtree.
+ * @param move First vertex in the subtree.
+ * @param target New vertex being the parent to the subtree.
  */
-static void mergeBranches(tree_decomp_t & tree, unsigned int vertex,
-                          unsigned int move, unsigned int target)
+static void mergeBranches(
+  tree_decomp_t & tree,
+  unsigned int vertex,
+  unsigned int move,
+  unsigned int target
+  )
 {
   std::vector<unsigned int> bagUnion(tree[move].size() + tree[target].size());;
   auto last = std::set_union(tree[move].begin(), tree[move].end(),
@@ -200,6 +189,9 @@ static void mergeBranches(tree_decomp_t & tree, unsigned int vertex,
  * Convert an existing tree decomposition into a binary tree.
  * Traverse the tree once and push additional subtrees
  * onto neighbouring branches, while maintaining invariants.
+ *
+ * @param inputTree Tree to be processed.
+ * @return The resulting binary decomposition paired with a root vertex.
  */
 std::pair<tree_decomp_t, unsigned int> convertToBinaryTree(const tree_decomp_t & inputTree)
 {
@@ -275,9 +267,21 @@ std::pair<tree_decomp_t, unsigned int> convertToBinaryTree(const tree_decomp_t &
   return std::make_pair(tree, startVertex);
 }
 
-static std::list<unsigned int> getChildren(const tree_decomp_t & tree,
-                                           const unsigned int vertex,
-                                           const std::vector<bool> & visited)
+/**
+ * Retrieve the children of some vertex in the supplied tree.
+ * Will ignore any vertices outside of the visited array, or 
+ * any vertices that are marked as visited.
+ *
+ * @param tree Tree to be queried.
+ * @param vertex Parent vertex.
+ * @param visited Array indexed by vertices,
+ *                indicating if some vertex has been visited.
+ */
+static std::list<unsigned int> getChildren(
+  const tree_decomp_t & tree,
+  const unsigned int vertex,
+  const std::vector<bool> & visited
+  )
 {
   std::list<unsigned int> children;
   for(auto it = boost::adjacent_vertices(vertex, tree); it.first != it.second;
@@ -295,10 +299,16 @@ static std::list<unsigned int> getChildren(const tree_decomp_t & tree,
 }
 
 /**
- *
+ * Process the tree to satisfy critieria 1 of nice tree decompositions.
+ * 
+ * @param inputTree Tree to be processed.
+ * @param root Root node of the tree.
+ * @return Processed tree satisfying critieria 1.
  */
-static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
-                                            const unsigned int root)
+static tree_decomp_t convertToNiceCriteria1(
+  const tree_decomp_t & inputTree,
+  const unsigned int root
+  )
 {
   tree_decomp_t out(inputTree);
   std::queue<unsigned int> work;
@@ -313,7 +323,6 @@ static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
     //Split child edges when there are two children available
     auto children = getChildren(out, p, visited);
 
-    //TODO: should probably check bag contents as well (avoid proper bags)
     if(children.size() == 2)
     {
       auto splitPath = [&out](unsigned int p, unsigned int child)
@@ -346,10 +355,16 @@ static tree_decomp_t convertToNiceCriteria1(const tree_decomp_t & inputTree,
 }
 
 /**
- *
+ * Process the tree to satisfy critieria 2 of nice tree decompositions.
+ * 
+ * @param inputTree Tree to be processed.
+ * @param root Root node of the tree.
+ * @return Processed tree satisfying critieria 2.
  */
-static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
-                                            const unsigned int root)
+static tree_decomp_t convertToNiceCriteria2(
+  const tree_decomp_t & inputTree,
+  const unsigned int root
+  )
 {
   unsigned long largestBag = 0;
   for(auto v = 0u; v < boost::num_vertices(inputTree); ++v)
@@ -515,10 +530,15 @@ static tree_decomp_t convertToNiceCriteria2(const tree_decomp_t & inputTree,
 }
 
 /**
+ * Process the tree to satisfy critieria 3 of nice tree decompositions.
+ *
  * Ensures that:
  * (1) all leafs have singleton bags
  * (2) the root node has an empty bag
- *
+ * 
+ * @param inputTree Tree to be processed.
+ * @param root Root node of the tree.
+ * @return Processed tree satisfying critieria 3.
  */
 static std::pair<tree_decomp_t, unsigned int> convertToCriteria3(
   const tree_decomp_t & inputTree,
@@ -613,6 +633,9 @@ static std::pair<tree_decomp_t, unsigned int> convertToCriteria3(
  * (2) if a node i has two children j; h then X_i = X_j = X_h,
  * (3) if a node i has one child, then either |X_i|=|X_j| + 1
  *     and X_j \subset X_i or |X_i|=|X_j| − 1 and X_i \subset X_j.
+ *
+ * @param inputTree Tree to be processed.
+ * @return The resulting tree and a root node.
  */
 std::pair<tree_decomp_t, unsigned int> convertToNiceDecomposition(const tree_decomp_t & inputTree)
 {
@@ -623,11 +646,6 @@ std::pair<tree_decomp_t, unsigned int> convertToNiceDecomposition(const tree_dec
                         tree.second),
                       tree.second);
   return niceDecomp;
-}
-
-void visualizeDecomposition(std::ostream & os, const tree_decomp_t & tree)
-{
-  boost::write_graphviz(os, tree, VertexSetWriter(tree));
 }
 
 } }

@@ -126,17 +126,6 @@ void testSimpleHomomorphism(std::ostream & os)
        << homoCount1 << " and " << homoCount2
        << std::endl;
 
-    os << ">>>>>>>>> HOST GRAPH >>>>>>>>>>>" << std::endl;
-    visualizeGraph(os, g2);
-
-    os << ">>>>>>>>> PATTERN GRAPH >>>>>>>>>>>" << std::endl;
-    visualizeGraph(os, g1);
-
-    os << ">>>>>>>>> Decomposition >>>>>>>>>>>" << std::endl;
-    os << "rooted in vertex " << niceTree.second << std::endl;
-    Tree::visualizeDecomposition(os, niceTree.first);
-    os << std::endl;
-
     assert(homoCount1 == homoCount2 && homoCount1 == refCount);
   };
 
