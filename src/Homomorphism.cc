@@ -16,15 +16,20 @@ namespace Count { namespace Homomorphism {
 using namespace Utils;
 
 /**
- * calculate a stingy ordering satisfying critieria 1 and 2 (Diaz)
+ * Calculate a stingy ordering satisfying critieria 1 and 2 (Diaz)
  * (1) the first element is a child, the last element is the root
  * (2) all parents occur after their childs
  *
  * only space bound affected by lack of critiera 3
+ *
+ * @param tree Tree to be used in calculations.
+ * @param root Root node in the provided tree.
+ * @return List of vertices, a stingy ordering.
  */
 std::list<unsigned int> calculateStingyOrdering(
   const Tree::tree_decomp_t & tree,
-  const unsigned int root)
+  const unsigned int root
+  )
 {
   std::list<unsigned int> stingy;
 
@@ -54,12 +59,18 @@ std::list<unsigned int> calculateStingyOrdering(
 }
 
 /**
+ * Extract the subtree indicated by the root node and
+ * some subroot node.
  *
+ * @param tree Tree to be used.
+ * @param root Root node in the input tree.
+ * @param subRoot Subroot of tree to be extracted.
  */
 std::set<unsigned int> extractSubTree(
   const Tree::tree_decomp_t & tree,
   const unsigned int root,
-  const unsigned int subRoot)
+  const unsigned int subRoot
+  )
 {
   std::set<unsigned int> subTreeVertices;
   std::vector<bool> visited(boost::num_vertices(tree), false);
@@ -92,48 +103,30 @@ std::set<unsigned int> extractSubTree(
   return subTreeVertices;
 }
 
-//TODO: remove these
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto e : map)
-  {
-    os << (char)('a' + e.first) << " -> " << (char)('a' + e.second) << ", ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-
 /**
+ * Count the number of homomorphisms between a pattern graph
+ * and some host graph, extending the provided injective homomorphism.
  *
+ * @param pattern Pattern graph (source).
+ * @param decomp Decomposition of the provided pattern graph.
+ * @param root Root node of the decomposition.
+ * @param host Host graph (destination).
+ * @param homoRef Provided injective homomorphism.
+ * @return The number of valid extensions.
  */
 unsigned long long countHomomorphisms(
   const Tree::undirected_graph_t & pattern,
   const Tree::tree_decomp_t & decomp,
   const unsigned int root,
   const Tree::undirected_graph_t & host,
-  const map_t & homoRef)
+  const map_t & homoRef
+  )
 {
   std::map<unsigned int, std::map<map_t, count_t>> counts;
 
   if(boost::num_vertices(host) == 0)
   {
     assert(boost::num_vertices(pattern) != 0);
-    //std::cerr << "ignoring empty host graph" << std::endl;
     return 0;
   }
 
@@ -163,8 +156,6 @@ unsigned long long countHomomorphisms(
     auto const alphabetSize = boost::num_vertices(host);
     auto const length = vec.size();
 
-    //std::cerr << "alphabetSize=" << alphabetSize  << ", length=" << length << std::endl;
-
     auto nextIndex = 0;
     while(nextIndex < length &&
           vec.at(nextIndex) == alphabetSize - 1)
@@ -175,13 +166,11 @@ unsigned long long countHomomorphisms(
 
     if(nextIndex == length)
     {
-      //std::cerr << "returning false" << std::endl;
       return false;
     }
 
     vec.at(nextIndex)++;
 
-    //std::cerr << "returning true" << std::endl;
     return true;
   };
 
@@ -203,9 +192,7 @@ unsigned long long countHomomorphisms(
     [&decomp, &nextMap, &homoRef]
     (const unsigned int p, mappable_t f)
   {
-    //std::cerr << "generateAllMaps(p=" << p << ")" << std::endl;
     auto const length = decomp[p].size();
-    //std::cerr << "length=" << length << std::endl;
 
     if(length == 0)
     {
@@ -242,7 +229,6 @@ unsigned long long countHomomorphisms(
         homo[bag.at(i)] = enumeration.at(i);
       }
 
-      //TODO: Updated from continue
       if(isValidExtension(homo))
       {
         f(homo);
@@ -251,18 +237,13 @@ unsigned long long countHomomorphisms(
     } while(nextMap(enumeration));
   };
 
-
-  //TODO: What about empty host graphs?
-
   for(auto const p : ordering)
   {
-    //std::cerr << "p=" << p << std::endl;
     auto children = getChilds(p);
 
     //Start node (leafs)
     if(children.size() == 0)
     {
-      //std::cerr << ">>>> START" << std::endl;
       assert(decomp[p].size() == 1);
       auto v = *decomp[p].begin();
 
@@ -270,14 +251,12 @@ unsigned long long countHomomorphisms(
       auto homoIt = homoRef.find(v);
       if(homoIt != std::end(homoRef))
       {
-        //std::cerr << "v=" << v << " already in homo." << std::endl;
         map_t key({*homoIt});
         counts[p][key] = 1;
       }
       //enumerate all host vertices otherwise
       else
       {
-        //std::cerr << "enumerating all host vertices with v=" << v << std::endl;
         for(auto a = 0u; a < boost::num_vertices(host); ++a)
         {
           map_t key({std::make_pair(v,a)});
@@ -289,7 +268,6 @@ unsigned long long countHomomorphisms(
     else if(children.size() == 1 &&
             decomp[p].size() == decomp[*children.begin()].size() + 1)
     {
-      //std::cerr << ">>>> INTRODUCE" << std::endl;
       auto q = *children.begin();
       auto v = getUniqueSetDiff(p, q,children);
 
@@ -316,16 +294,12 @@ unsigned long long countHomomorphisms(
         }
       }
 
-      //std::cerr << "S_q = " << Sq << std::endl;
-
       //forall f in Fq
       auto mappable = [p, q, v, &Sq, &host, &counts, &homoRef](map_t homo)
       {
-        //std::cerr << "new homomorphism: " << homo << std::endl;
         //for all a in V(H)
         for(auto a = 0u; a < boost::num_vertices(host); ++a)
         {
-          //std::cerr << "considering mapping " << v << " onto " << a << std::endl;
           //Determine which case applies
           bool allEdgesExist = true;
           for(auto u : Sq)
@@ -339,11 +313,10 @@ unsigned long long countHomomorphisms(
             }
           }
           
-          //check if part of provided homomorphism (TODO: rewrite)
+          //check if part of provided homomorphism
           auto allowed = true;
           if(homoRef.count(v) == 1 && homoRef.at(v) != a)
           {
-            //std::cerr << "rejected" << std::endl;
             allowed = false;
           }
 
@@ -351,14 +324,11 @@ unsigned long long countHomomorphisms(
           extendedHomo[v] = a;
           if(allEdgesExist && allowed)
           {
-            /*std::cerr << "writing counts[" << p << "] = counts[" << q << "][" << homo << "]"
-                      << "(" << counts[q][homo] << ")" << std::endl;*/
             assert(counts[q].count(homo) == 1);
             counts[p][extendedHomo] = counts[q][homo];
           }
           else
           {
-            //std::cerr << "writing 0" << std::endl;
             counts[p][extendedHomo] = 0;
           }
         }
@@ -366,41 +336,33 @@ unsigned long long countHomomorphisms(
       generateAllMaps(q, mappable);
 
       counts.erase(q);
-      //std::cerr << "end of intro" << std::endl;
     }
     //Forget node
     else if(children.size() == 1 &&
             decomp[p].size() == decomp[*children.begin()].size() - 1)
     {
-      //std::cerr << ">>>> FORGET" << std::endl;
       auto q = *children.begin();
       auto v = getUniqueSetDiff(q, p, children);
-      //std::cerr << "v=" << v << std::endl;
 
       auto mappable = [v, p, q, &host, &counts](map_t homo)
       {
-        //std::cerr << "new homomorphism: " << homo << std::endl;
         //Sum over all host vertices
         unsigned int homoSum = 0;
         for(auto a = 0u; a < boost::num_vertices(host); ++a)
         {
           auto extendedHomo = homo;
           extendedHomo[v] = a;
-          //std::cerr << "extending homo to: " << extendedHomo << std::endl;
           if(counts[q].count(extendedHomo))
           {
-            //std::cerr << "adding " << counts[q].at(extendedHomo) << std::endl;
             homoSum += counts[q].at(extendedHomo);
           }
         }
 
-        //std::cerr << "writing counts[" << p << "][" << homo << "]=" << homoSum << std::endl;
         counts[p][homo] = homoSum;
       };
 
       generateAllMaps(p, mappable);
       counts.erase(q);
-      //std::cerr << "end of forget" << std::endl;
     }
     //Join node
     else
@@ -429,10 +391,19 @@ unsigned long long countHomomorphisms(
   return counts.at(root).at(map_t());
 }
 
+/**
+ * Check if the provided homomorphism is valid.
+ *
+ * @param sourceGraph From this graph.
+ * @param targetGraph To this graph.
+ * @param homo A homomorphism.
+ * @return True if valid.
+ */
 bool isValidPartialHomomorphism(
   const Tree::undirected_graph_t & sourceGraph,
   const Tree::undirected_graph_t & targetGraph,
-  const map_t & homo)
+  const map_t & homo
+  )
 {
   auto mappedVertices = extractKeys<unsigned int, unsigned int>(homo);
 

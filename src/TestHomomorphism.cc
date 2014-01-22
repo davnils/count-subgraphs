@@ -13,21 +13,11 @@
 
 namespace Count { namespace Homomorphism { namespace Test {
 
-static void visualizeGraph(std::ostream & os, const Tree::undirected_graph_t & graph)
-{
-  std::vector<std::string> labels =
-    {"a", "b", "c", "d", "e", "f", "g",
-     "h", "i", "j", "k", "l", "m", "n",
-     "o", "p", "q", "r", "s", "t", "v",
-     "w", "x", "y",  "z"};
-  boost::write_graphviz(os, graph, boost::make_label_writer(&labels[0]));
-  os << std::endl;
-}
-
 using namespace Count::Test;
 
 /**
- *
+ * Test stingy orderings.
+ * @param os Stream to be written with output.
  */
 void testStingyOrdering(std::ostream & os)
 {
@@ -61,7 +51,11 @@ void testStingyOrdering(std::ostream & os)
 }
 
 /**
+ * Test naive counting, i.e. exhaustive search.
+ * Injective and non-injective counts are compared.
+ * Also, a known number of automorphisms is verified.
  *
+ * @param os Stream to be written with output.
  */
 void testNaiveCounting(std::ostream & os)
 {
@@ -99,7 +93,9 @@ void testNaiveCounting(std::ostream & os)
 }
 
 /**
+ * Verify that counting homomorphisms gives some known value.
  *
+ * @param os Stream to be written with output.
  */
 void testSimpleHomomorphism(std::ostream & os)
 {
@@ -133,7 +129,10 @@ void testSimpleHomomorphism(std::ostream & os)
 }
 
 /**
+ * Verify that the naive and proper implementation of
+ * counting homomorphisms give the same results.
  *
+ * @param os Stream to be written with output.
  */
 void testCountHomomorphisms(std::ostream & os)
 {
