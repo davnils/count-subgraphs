@@ -7,45 +7,12 @@ namespace Count { namespace Simple {
 
 using namespace Utils;
 
-/* TODO: REMOVE THESE */
-std::ostream & operator<<(std::ostream & os, const std::vector<unsigned int> & vec)
-{
-  os << " {";
-  for(auto e : vec)
-  {
-    os << (char)('0' + e) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto e : map)
-  {
-    os << (char)('a' + e.first) << " -> " << (char)('a' + e.second) << ", ";
-  }
-  os << "} ";
-
-  return os;
-};
-
 /**
+ * Build an index map indicating where subsets are mapped into the matrix.
  *
+ * @param n Size of the universe.
+ * @param l l-parameter controlling the size of subsets.
+ * @return Index map from subsets to index.
  */
 std::map<std::set<unsigned int>, unsigned int> buildMatrixIndexMap(
   const unsigned int n,
@@ -73,7 +40,14 @@ std::map<std::set<unsigned int>, unsigned int> buildMatrixIndexMap(
 }
 
 /**
+ * Build a matrix indexed by subsets on rows and columns.
+ * The provided callback is evaluated over all disjoint positions.
  *
+ * @param n Size of the universe.
+ * @param rowSubsetParam Size of row subsets.
+ * @param colSubsetParam Size of column subsets.
+ * @param eval Callback executed on certain positions.
+ * @return The resulting matrix.
  */
 boost::numeric::ublas::matrix<unsigned long long> buildMatrix(
   const unsigned int n,
@@ -122,7 +96,14 @@ boost::numeric::ublas::matrix<unsigned long long> buildMatrix(
 }
 
 /**
+ * Build the difference transform over the provided parameters.
  *
+ * @param triple Triple containing partial counts.
+ * @param n Size of the universe.
+ * @param q Size of the subsets.
+ * @param minL Lower value in l range.
+ * @param maxL Upper value in l range.
+ * @return Map from subsets to the corresponding sums.
  */
 std::map<std::set<unsigned int>, long> calculateDiffTransform(
   const partition_triple_t & triple,
@@ -200,7 +181,16 @@ std::map<std::set<unsigned int>, long> calculateDiffTransform(
 }
 
 /**
+ * Build the intersection transform over the provided parameters.
  *
+ * @param triple Triple containing partial counts.
+ * @param q Size of the subsets.
+ * @param n Size of the universe.
+ * @param minL Lower value in l range.
+ * @param maxL Upper value in l range.
+ * @param gamma Gamma parameter.
+ * @return Vector indexed by l-values,
+ *         containing maps from subsets to the corresponding sums.
  */
 std::vector<std::map<std::set<unsigned int>, long>> calculateIntersectionTransform(
   const partition_triple_t & triple,
@@ -245,7 +235,14 @@ std::vector<std::map<std::set<unsigned int>, long>> calculateIntersectionTransfo
 }
 
 /**
+ * Solve the expected number of indeterminates.
  *
+ * @param triple Triple containing partial counts.
+ * @param q Size of the subsets.
+ * @param n Size of the universe.
+ * @param numSimple Number of indeterminates to be solved.
+ * @param gamma Gamma parameter.
+ * @return Vector containing solutions to the first indeterminates.
  */
 std::vector<long> solveIndeterminates(
   const partition_triple_t & triple,
@@ -280,21 +277,15 @@ std::vector<long> solveIndeterminates(
     return xVec;
   }
 
-  //std::cerr << "lMin=" << lMin << ", lMax=" << lMax << ", q=" << q << ", n=" << n << std::endl;
-
-  //std::cerr << "calculateDiffTransform()" << std::endl;
   auto diffTransform = calculateDiffTransform(triple, q, n, lMin, lMax);
-  //std::cerr << "calculateIntersectionTransform()" << std::endl;
   auto intersectionTransform = calculateIntersectionTransform(triple, q, n, lMin, lMax, gamma);
 
   //solve each indeterminate
   for(auto j : indices)
   {
-    //std::cerr << "j=" << j << std::endl;
     long total = 0;
     for(unsigned int l = q - j; l <= q + j; ++l)
     {
-      //std::cerr << "l=" << l << std::endl;
       //enumerate all subsets D
       auto evalSubset =
         [q, l, j, &diffTransform, &intersectionTransform, &total]
@@ -304,7 +295,6 @@ std::vector<long> solveIndeterminates(
         auto dSet = std::set<unsigned int>(std::begin(d), std::end(d));
         total += diffTransform.at(dSet) * intersectionTransform.at((q + l - j)/2).at(dSet);
       };
-      //std::cerr << "generating subsets of size " << l << " over alphabet of size " << n << std::endl;
       applyOnSubsets(n, l, evalSubset);
     }
 

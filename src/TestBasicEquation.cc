@@ -14,7 +14,7 @@ using namespace Utils;
 using namespace Count::Test;
 
 /**
- * Verify the implementation of the L table recurrence, 
+ * Verify the implementation of the L table recurrence
  * by comparing against a naive recursion.
  *
  * @param os Output stream to be written.

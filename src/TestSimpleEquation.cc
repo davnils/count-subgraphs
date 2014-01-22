@@ -14,42 +14,16 @@ namespace Count { namespace Simple { namespace Test {
 using namespace Utils;
 using namespace Count::Test;
 
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::vector<int> & vec)
-{
-  os << " {";
-  for(auto s : vec)
-  {
-    os << s << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto s : map)
-  {
-    os << (char)('a' + s.first)  << ":" << (char)('a' + s.second) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
+/**
+ * Verify the implementation of the symmetric difference product
+ * by comparing against a naive enumeration.
+ *
+ * @param triple Triple containing partial counts.
+ * @param dSet The set D.
+ * @param n Size of the universe.
+ * @param q Size of the subsets.
+ * @return Total sum.
+ */
 static unsigned long long naiveSymDiffProduct(
   const partition_triple_t & triple,
   const std::set<unsigned int> & dSet,
@@ -86,7 +60,12 @@ static unsigned long long naiveSymDiffProduct(
 }
 
 /**
+ * Generate all subsets of some given size and map them onto random values.
  *
+ * @param n Size of the universe.
+ * @param q Size of the subsets.
+ * @param maxVal Maximum size of integers being stored.
+ * @return Map of subsets with random values.
  */
 static std::map<std::set<unsigned int>, unsigned long> generateSubsets(
   const unsigned int n,
@@ -115,7 +94,10 @@ static std::map<std::set<unsigned int>, unsigned long> generateSubsets(
 }
 
 /**
+ * Verify the implementation of the symmetric difference product
+ * by comparing against a naive enumeration.
  *
+ * @param os Output stream to be written.
  */
 void testSymDiffProduct(std::ostream & os)
 {
@@ -150,7 +132,13 @@ void testSymDiffProduct(std::ostream & os)
 }
 
 /**
- * Implementation of definition 2.5.
+ * Implementation of definition 2.5 in the counting paper.
+ *
+ * @param triple Triple containing partial counts.
+ * @param n Size of the universe.
+ * @param q Size of the subsets.
+ * @param j Size of the symmetric differences.
+ * @return Total sum.
  */
 long long naiveSolveSimpleIndeterminate1(
   const partition_triple_t & triple,
@@ -207,87 +195,10 @@ long long naiveSolveSimpleIndeterminate1(
 }
 
 /**
- * Implementation of definition 2.13.
- */
-long long naiveSolveSimpleIndeterminate2(
-  const partition_triple_t & triple,
-  const unsigned int n,
-  const unsigned int q,
-  const unsigned int j
-  )
-{
-  long long result = 0;
-
-  //consider every l in the given range
-  for(auto l = q - j; l <= q + j; ++l)
-  {
-    //enumerate all subsets 'D'
-    auto evalD =
-      [l, q, n, j, &triple, &result]
-      (const std::vector<bool> & markers)
-    {
-      auto vec = extractSubset(markers);
-      auto dSet = std::set<unsigned int>(std::begin(vec), std::end(vec));
-
-      //enumerate all subsets A and B
-      long long sumAB = 0;
-      auto evalA =
-        [n, q, &triple, &dSet, &sumAB]
-        (const std::vector<bool> & markers)
-      {
-        auto vec = extractSubset(markers);
-        auto aSet = std::set<unsigned int>(std::begin(vec), std::end(vec));
-
-        auto evalB =
-          [n, q, &triple, &dSet, aSet, &sumAB]
-          (const std::vector<bool> & markers)
-        {
-          auto vec = extractSubset(markers);
-          auto bSet = std::set<unsigned int>(std::begin(vec), std::end(vec));
-
-          if(buildSetDifference<unsigned int>(aSet, bSet) == dSet)
-          {
-            if(triple.f.count(aSet) != 0 && triple.g.count(bSet) != 0)
-            {
-              sumAB += triple.f.at(aSet) * triple.g.at(bSet);
-            }
-          }
-        };
-        applyOnSubsets(n, q, evalB);
-      };
-      applyOnSubsets(n, q, evalA);
-
-      //enumerate all subsets C
-      long long sumC = 0;
-      auto evalC =
-        [l, q, n, j, &triple, &dSet, &sumC]
-        (const std::vector<bool> & markers)
-      {
-        auto vec = extractSubset(markers);
-        auto cSet = std::set<unsigned int>(std::begin(vec), std::end(vec));
-
-        assert((q + l - j) % 2 == 0);
-        if(buildSetIntersection<unsigned int>(cSet, dSet).size() == (q + l - j)/2)
-        {
-          if(triple.h.count(cSet) != 0)
-          {
-            sumC += triple.h.at(cSet);
-          }
-        }
-      };
-      applyOnSubsets(n, q, evalC);
-
-      result += sumAB * sumC;
-    };
-    applyOnSubsets(n, l, evalD);
-  }
-
-  return result;
-}
-
-
-/**
+ * Verify the implementation of simple equations.
+ * This is done by comparing results with a naive solver.
  *
+ * @param os Output stream to be written.
  */
 void testSimpleEquations(std::ostream & os)
 {
@@ -368,9 +279,9 @@ void testSimpleEquations(std::ostream & os)
       }
     }
 
-    std::cerr << "simpleCount=" << simpleCount
-              << ", total=" << e
-              << std::endl;
+    os << "simpleCount=" << simpleCount
+       << ", total=" << e
+       << std::endl;
 
     //disregard the case of insufficient amount of indeterminates
     if(simpleCount == 0)
@@ -396,30 +307,19 @@ void testSimpleEquations(std::ostream & os)
           auto var = indeterminatesBasic.at(j);
           auto coeff = Count::getCoefficient(n, i, var);
           A(i, j) = coeff;
-          //os << coeff << " ";
         }
 
         y(i, 0) = equations.second.at(i);
-        //os << " " << equations.second.at(i) << std::endl;
       }
 
       auto basicSolutions = Count::solveLinearSystem(A, y);
-      //assert(basicSolutions.back() == Naive::evaluateDisjointTriple(triple, g2, part));
 
       //verify each indeterminate for this candidate (both through naive and basic-eq solvers)
       for(auto i = 0u; i < indeterminates.size(); ++i)
       {
         auto ref1 = naiveSolveSimpleIndeterminate1(triple.second, n, q, indeterminates.at(i));
-        //auto ref2 = naiveSolveSimpleIndeterminate2(triple.second, n, q, indeterminates.at(i));
         auto sample = samples.at(i);
 
-        /*std::cerr << "basic=" << basicSolutions.at(i)
-                  << ", ref1=" << ref1
-                  //<< ", ref2=" << ref2
-                  << ", sample=" << sample
-                  << std::endl;*/
-
-        //assert(ref1 == ref2);
         assert(ref1 == basicSolutions.at(i));
         assert(sample == ref1);
       }
