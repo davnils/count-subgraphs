@@ -13,7 +13,9 @@
 #include "TestUtils.hpp"
 #include "TreeDecomposition.hpp"
 
-namespace Tree { namespace Test {
+using namespace Count::Test;
+
+namespace Count { namespace Tree { namespace Test { 
 
 /**
  *
@@ -76,9 +78,9 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
       auto const & c = tree[childs.front()];
       auto const & v = tree[vertex];
 
-      auto first  = v.size() == c.size() + 1 &&
+      auto first  = v.size() == c.size() - 1 &&
                     std::includes(c.begin(), c.end(), v.begin(), v.end());
-      auto second = v.size() == c.size() - 1 &&
+      auto second = v.size() == c.size() + 1 &&
                     std::includes(v.begin(), v.end(), c.begin(), c.end());
 
       if(!first && !second)
@@ -86,6 +88,7 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
         return false;
       }
       work.push(childs.front());
+      visited.at(childs.front()) = true;
     }
     //Two children case
     else if(childs.size() == 2)
@@ -99,32 +102,12 @@ static bool isNiceTreeDecomposition(const tree_decomp_t & tree, unsigned int roo
 
       work.push(first);
       work.push(second);
+      visited.at(first) = true;
+      visited.at(second) = true;
     }
   }
 
   return true;
-}
-
-/**
- *
- */
-static void runTests(std::function<void(void)> testCase, const std::string & title,
-                     std::ostream & os)
-{
-  const unsigned int TESTS = 1000;
-
-  for(unsigned int test = 0; test < TESTS; ++test)
-  {
-    os
-      << "----------------NEW TEST-------------------\n"
-      << "Running test (" << title << "): #" << test << "\n";
-
-    testCase();
-
-    os
-      << "-------------------------------------------\n"
-      << std::endl;
-  }
 }
 
 /**
@@ -137,7 +120,7 @@ void testBinaryDecomposition(std::ostream & os)
 
   auto testCase = [&gen]()
   {
-    auto randomGraph = ::Count::Test::generateConnectedGraph(gen);
+    auto randomGraph = ::Count::Test::generateConnectedGraph(gen, 200);
     auto decomposed = buildTreeDecomposition(randomGraph);
     auto binaryTree = convertToBinaryTree(decomposed);
 
@@ -157,39 +140,16 @@ void testNiceTreeDecomposition(std::ostream & os)
 
   auto testCase = [&gen, &os]()
   {
-    auto randomGraph = ::Count::Test::generateConnectedGraph(gen);
+    auto randomGraph = ::Count::Test::generateConnectedGraph(gen, 200);
     auto decomp = buildTreeDecomposition(randomGraph);
-    /*::count::visualizeDecomposition(os, decomp);
-    os << std::endl;*/
     auto niceTree = convertToNiceDecomposition(decomp);
-    //::count::visualizeDecomposition(os, binaryTree.first);
 
     assert(isBinaryTree(niceTree.first));
+    assert(niceTree.first[niceTree.second].empty());
     assert(isNiceTreeDecomposition(niceTree.first, niceTree.second));
   };
 
   runTests(testCase, "NiceTreeDecomposition", os);
 }
 
-/**
- *
- */
-void testCountHomomorphisms(std::ostream & os)
-{
-  const unsigned int SEED = 0xf00d;
-  boost::random::mt19937 gen(SEED);
-
-  auto testCase = [&gen, &os]()
-  {
-    /*auto randomGraph = ::count::test::generateConnectedGraph(gen);
-    auto decomp = buildTreeDecomposition(randomGraph);
-    auto niceTree = convertToNiceDecomposition(decomp);
-
-    assert(isBinaryTree(niceTree.first));
-    assert(isNiceTreeDecomposition(niceTree.first, niceTree.second));*/
-  };
-
-  runTests(testCase, "CountHomomorphisms", os);
-}
-
-} }
+} } }

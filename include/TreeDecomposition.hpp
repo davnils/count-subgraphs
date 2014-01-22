@@ -3,7 +3,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <set>
 
-namespace Tree {
+namespace Count { namespace Tree {
 
 typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS,
                               std::set<unsigned int>>
@@ -19,4 +19,4 @@ void visualizeDecomposition(std::ostream & os, const tree_decomp_t & tree);
 
 std::pair<tree_decomp_t, unsigned int> convertToBinaryTree(const tree_decomp_t & inputTree);
 
-}
+} }
