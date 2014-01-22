@@ -8,7 +8,15 @@ namespace Count { namespace Naive {
 using namespace Utils;
 
 /**
+ * Recursive step in exhaustive search counting the
+ * (optionally injective) homomorphisms.
  *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @param injective Flag indicating if to only keep injective ones.
+ * @param patternSet Available vertices in the pattern graph.
+ * @param hostSet Available vertices in the host graph.
+ * @return Total count.
  */
 static unsigned long recurse(
   const Tree::undirected_graph_t & pattern,
@@ -73,12 +81,19 @@ static unsigned long recurse(
 }
 
 /**
+ * Evaluate the number of (optionally injective)
+ * homomorphisms by performing an exhaustive search.
  *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @param injective Flag indicating if to only keep injective ones.
+ * @return Total count.
  */
 static unsigned long recursiveWrapper(
   const Tree::undirected_graph_t & pattern,
   const Tree::undirected_graph_t & host,
-  const bool injective)
+  const bool injective
+  )
 {
   auto patternIt = boost::vertices(pattern);
   auto hostIt = boost::vertices(host);
@@ -90,68 +105,50 @@ static unsigned long recursiveWrapper(
 }
 
 /**
+ * Evaluate the number of homomorphisms
+ * by performing an exhaustive search.
  *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @return Total count.
  */
 unsigned long countHomomorphisms(
   const Tree::undirected_graph_t & pattern,
-  const Tree::undirected_graph_t & host)
+  const Tree::undirected_graph_t & host
+  )
 {
   return recursiveWrapper(pattern, host, false);
 }
 
 /**
+ * Evaluate the number of injective homomorphisms
+ * by performing an exhaustive search.
  *
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
+ * @return Total count.
  */
 unsigned long countInjective(
   const Tree::undirected_graph_t & pattern,
-  const Tree::undirected_graph_t & host)
+  const Tree::undirected_graph_t & host
+  )
 {
   return recursiveWrapper(pattern, host, true);
 }
 
-std::ostream & operator<<(std::ostream & os, const std::set<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::vector<unsigned int> & set)
-{
-  os << " {";
-  for(auto s : set)
-  {
-    os << (char)('a' + s) << " ";
-  }
-  os << "} ";
-
-  return os;
-};
-
-std::ostream & operator<<(std::ostream & os, const std::map<unsigned int, unsigned int> & map)
-{
-  os << " {";
-  for(auto e : map)
-  {
-    os << (char)('a' + e.first) << " -> " << (char)('a' + e.second) << ", ";
-  }
-  os << "} ";
-
-  return os;
-};
-
 /**
+ * Evaluate a triple corresponding to an injective homomorphism.
  *
+ * @param homo Pair of the homomorphism and triple.
+ * @param host Host graph (target).
+ * @param partition Pattern partition to be used.
+ * @return Aggregated count.
  */
 unsigned long evaluateDisjointTriple(
   const std::pair<inj_homo_t, partition_triple_t> & homo,
   const Tree::undirected_graph_t & host,
-  const PatternPartition & partition)
+  const PatternPartition & partition
+  )
 {
   //sum all products over all pairwise disjoint sets A,B,C of maximum size
   unsigned long result = 0;
@@ -166,7 +163,7 @@ unsigned long evaluateDisjointTriple(
 
   auto counts = homo.second;
   auto outerEnum =
-    [&hostSet, &counts, &result, &partition, &homo /* TODO: REMOVE*/]
+    [&hostSet, &counts, &result, &partition]
     (const std::vector<bool> & markers)
   {
     auto vertexVec = extractSubset(markers, std::vector<unsigned int>(std::begin(hostSet), std::end(hostSet)));
@@ -183,7 +180,7 @@ unsigned long evaluateDisjointTriple(
     }
 
     auto innerEnum =
-      [&hostSet, &counts, &result, &lVertices, &mVertexRange, &homo, &partition]
+      [&hostSet, &counts, &result, &lVertices, &mVertexRange, &partition]
       (const std::vector<bool> & markers)
     {
       //mVertices is extracted from V(H) \ L'
@@ -202,7 +199,7 @@ unsigned long evaluateDisjointTriple(
       }
 
       auto innerMostEnum =
-        [&hostSet, &counts, &result, &lVertices, &rVertexRange, &mVertices, &homo, &partition]
+        [&hostSet, &counts, &result, &lVertices, &rVertexRange, &mVertices, &partition]
         (const std::vector<bool> & markers)
       {
         auto vertexVec = extractSubset(markers, rVertexRange);
@@ -234,12 +231,19 @@ unsigned long evaluateDisjointTriple(
 }
 
 /**
+ * Sum the evaluation of all triples, where each triple corresponds
+ * to an injective homomorphism.
  *
+ * @param counts The set of all triples.
+ * @param host Host graph (target).
+ * @param partition Pattern partition to be used.
+ * @return Aggregated count.
  */
 unsigned long evaluateDisjointTriples(
   const std::map<inj_homo_t, partition_triple_t> & counts,
   const Tree::undirected_graph_t & host,
-  const PatternPartition & partition)
+  const PatternPartition & partition
+  )
 {
   unsigned long sum = 0;
 
