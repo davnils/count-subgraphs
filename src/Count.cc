@@ -448,7 +448,7 @@ std::pair<matrix_t, matrix_t> buildSystem(
       auto coeff = Count::getCoefficient(n, i, var);
       A(i, j) = coeff;
     }
-    y(i, 0) = equations.second.at(i);
+    y(i, 0) = equations.at(i);
   }
 
   //optionally, solve indeterminates and add them to the system
@@ -467,8 +467,8 @@ std::pair<matrix_t, matrix_t> buildSystem(
  * Limited to pattern graphs admitting an even 5-partitioning, 
  * where the size of L, M, and R, equals.
  *
- * @param pattern bla.
- * @param host bla.
+ * @param pattern Pattern graph (source).
+ * @param host Host graph (target).
  * @return Boolean flag indicating success and the count.
  */
 std::pair<bool, unsigned long long> countIsoSubgraphs(

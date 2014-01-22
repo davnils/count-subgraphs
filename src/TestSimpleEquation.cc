@@ -297,10 +297,10 @@ void testSimpleEquations(std::ostream & os)
 
       //build basic-eq reference
       auto equations = Basic::buildSystem(triple.second, q, n, 0.0);
-      boost::numeric::ublas::matrix<int> A(equations.second.size(), indeterminatesBasic.size()),
-                                         y(equations.second.size(), 1);
+      boost::numeric::ublas::matrix<int> A(equations.size(), indeterminatesBasic.size()),
+                                         y(equations.size(), 1);
 
-      for(auto i = 0u; i < equations.second.size(); ++i)
+      for(auto i = 0u; i < equations.size(); ++i)
       {
         for(auto j = 0u; j < indeterminatesBasic.size(); ++j)
         {
@@ -309,7 +309,7 @@ void testSimpleEquations(std::ostream & os)
           A(i, j) = coeff;
         }
 
-        y(i, 0) = equations.second.at(i);
+        y(i, 0) = equations.at(i);
       }
 
       auto basicSolutions = Count::solveLinearSystem(A, y);

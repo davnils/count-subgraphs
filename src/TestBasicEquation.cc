@@ -297,10 +297,10 @@ void testBasicEquations(std::ostream & os)
       //build the equation system
       auto equations = buildSystem(triple.second, q, boost::num_vertices(g2), 0.0);
 
-      boost::numeric::ublas::matrix<int> A(equations.second.size(), indeterminates.size()),
-                                         y(equations.second.size(), 1);
+      boost::numeric::ublas::matrix<int> A(equations.size(), indeterminates.size()),
+                                         y(equations.size(), 1);
 
-      for(auto i = 0u; i < equations.second.size(); ++i)
+      for(auto i = 0u; i < equations.size(); ++i)
       {
         for(auto j = 0u; j < indeterminates.size(); ++j)
         {
@@ -310,14 +310,14 @@ void testBasicEquations(std::ostream & os)
           os << coeff << " ";
         }
 
-        y(i, 0) = equations.second.at(i);
-        os << " " << equations.second.at(i);
+        y(i, 0) = equations.at(i);
+        os << " " << equations.at(i);
         std::flush(os);
 
         auto eqRef = naiveCalculateYi(i, q, boost::num_vertices(g2), triple.second);
         os << " (naive: " << eqRef << ")";
         os << std::endl;
-        assert(eqRef == equations.second.at(i));
+        assert(eqRef == equations.at(i));
       }
 
       //add up the contribution gathered by solving the system

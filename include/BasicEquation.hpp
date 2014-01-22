@@ -47,7 +47,7 @@ std::pair<parity_vec_t, parity_vec_t> buildTpValues(
   const double
   );
 
-std::pair<bool, std::vector<long long>> buildSystem(
+std::vector<long long> buildSystem(
   const Utils::partition_triple_t &,
   const unsigned int,
   const unsigned int,

@@ -104,6 +104,27 @@ std::set<unsigned int> extractSubTree(
 }
 
 /**
+ * Calculate the unique (single element) difference of two bags.
+ *
+ * @param decomp Decomposition containing the vertices.
+ * @param first First vertex.
+ * @param second Second vertex.
+ * @return The single element difference.
+ */
+static unsigned int getUniqueSetDiff(
+  const Tree::tree_decomp_t & decomp,
+  unsigned int first,
+  unsigned int second
+  )
+{
+  std::vector<unsigned int> diff(1);
+  std::set_difference(decomp[first].begin(), decomp[first].end(),
+                      decomp[second].begin(), decomp[second].end(),
+                      diff.begin());
+  return diff.at(0);
+}
+
+/**
  * Count the number of homomorphisms between a pattern graph
  * and some host graph, extending the provided injective homomorphism.
  *
@@ -133,7 +154,6 @@ unsigned long long countHomomorphisms(
   auto ordering = calculateStingyOrdering(decomp, root);
   std::vector<bool> visited(ordering.size(), false);
 
-  //TODO: Refactor
   auto getChilds = [&decomp, &visited](unsigned int v)
   {
     std::set<unsigned int> neighbours;
@@ -172,18 +192,6 @@ unsigned long long countHomomorphisms(
     vec.at(nextIndex)++;
 
     return true;
-  };
-
-  //TODO: Refactor
-  auto getUniqueSetDiff =
-    [&decomp]
-    (unsigned int first, unsigned int second, const std::set<unsigned int> & children)
-  {
-    std::vector<unsigned int> diff(1);
-    std::set_difference(decomp[first].begin(), decomp[first].end(),
-                        decomp[second].begin(), decomp[second].end(),
-                        diff.begin());
-    return diff.at(0);
   };
 
   typedef std::function<void(const map_t &)> mappable_t;
@@ -269,7 +277,7 @@ unsigned long long countHomomorphisms(
             decomp[p].size() == decomp[*children.begin()].size() + 1)
     {
       auto q = *children.begin();
-      auto v = getUniqueSetDiff(p, q,children);
+      auto v = getUniqueSetDiff(decomp, p, q);
 
       auto subVertices = extractSubTree(decomp, root, p);
       assert(!subVertices.empty());
@@ -342,7 +350,7 @@ unsigned long long countHomomorphisms(
             decomp[p].size() == decomp[*children.begin()].size() - 1)
     {
       auto q = *children.begin();
-      auto v = getUniqueSetDiff(q, p, children);
+      auto v = getUniqueSetDiff(decomp, q, p);
 
       auto mappable = [v, p, q, &host, &counts](map_t homo)
       {

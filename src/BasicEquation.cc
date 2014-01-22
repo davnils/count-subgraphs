@@ -251,8 +251,7 @@ std::pair<parity_vec_t, parity_vec_t> buildTpValues(
  * @aram gamma Gamma parameter value being used.
  * @return Vector of y values.
  */
-//TODO: remove first element of pair
-std::pair<bool, std::vector<long long>> buildSystem(
+std::vector<long long> buildSystem(
   const partition_triple_t & triple,
   const unsigned int q,
   const unsigned int n,
@@ -291,7 +290,7 @@ std::pair<bool, std::vector<long long>> buildSystem(
     yVec.push_back(total);
   }
 
-  return(std::make_pair(true, yVec));
+  return(yVec);
 }
 
 } }
