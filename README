@@ -11,6 +11,8 @@ The following has been implemented:
 
 The included main file simply executes the test suite, which covers all of the implemented functionality.
 
+In order to build this project you will need boost and dlib (path given in the Makefile).
+
 [0]
 counting thin subgraphs via packings faster than meet-in-the-middle time
 http://epubs.siam.org/doi/abs/10.1137/1.9781611973402.45
