@@ -7,13 +7,18 @@
 
 namespace Count { namespace Test {
 
-Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen)
+/**
+ *
+ */
+Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen, unsigned int maxSize)
 {
-  auto v = (rand() % 100)+1;
-  auto e = (rand() % 100)+1;
+  assert(maxSize >= 1);
+
+  auto v = (rand() % maxSize)+1;
+  auto e = (rand() % maxSize)+1;
   if(e > (v*(v-1))/2)
   {
-    v = e;
+    v = e + 1;
   }
 
   //Generate a random graph
@@ -25,17 +30,40 @@ Tree::undirected_graph_t generateConnectedGraph(boost::random::mt19937 & gen)
 
   //Connect all components, map each component to a vertex and add edges
   std::vector<unsigned int> componentMap(components);
-  for(unsigned int i = 0; i < v; i++)
+  for(unsigned int i = 0; i < v; ++i)
   {
     componentMap.at(indexToComponent.at(i)) = i;
   }
 
-  for(unsigned int i = 0; i < components - 1; i++)
+  for(unsigned int i = 0; i < components - 1; ++i)
   {
     boost::add_edge(componentMap.at(i), componentMap.at(i + 1), graph);
   }
 
   return graph;
 }
+
+/**
+ *
+ */
+void runTests(std::function<void(void)> testCase, const std::string & title,
+              std::ostream & os)
+{
+  const unsigned int TESTS = 100;
+
+  for(unsigned int test = 0; test < TESTS; ++test)
+  {
+    os
+      << "------------------NEW TEST---------------------\n"
+      << "Running test (" << title << "): #" << test << "\n";
+
+    testCase();
+
+    os
+      << "-----------------------------------------------\n"
+      << std::endl;
+  }
+}
+
 
 } }
