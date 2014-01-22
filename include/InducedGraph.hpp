@@ -6,10 +6,12 @@
 
 #include "TreeDecomposition.hpp"
 
-//TODO: Consider merging the structs
-
 namespace Count { namespace InducedGraph {
 
+/**
+ * Class implementing an edge predicate only keeping edges
+ * (v_1, v_2) of which both v_1 and v_ 2 are in the provided set.
+ */
 template<typename T>
 struct EdgePredicate
 {
@@ -28,6 +30,10 @@ private:
  std::set<unsigned int> m_filter;
 };
 
+/**
+ * Class implementing a vertex predicate only keeping vertices
+ * that are in the provided set.
+ */
 template<typename T>
 struct VertexPredicate
 {
@@ -46,7 +52,11 @@ private:
 };
 
 /**
+ * Build an induced subgraph consisting of vertices in the given set.
  *
+ * @param inputGraph Graph to be transformed.
+ * @param acceptedVertices Set of vertices to be kept.
+ * @return Induced subgraph.
  */
 template<typename T> T buildInducedSubGraph(
   const T & inputGraph,
@@ -66,6 +76,9 @@ template<typename T> T buildInducedSubGraph(
 }
 
 
+/**
+ * Boost vertex copier ignoring any vertex properties.
+ */
 struct vertex_copier_ignore_prop {
   vertex_copier_ignore_prop() = default;
 
@@ -78,7 +91,12 @@ struct vertex_copier_ignore_prop {
 };
 
 /**
+ * Build a tagged induced subgraph consisting of vertices in the given set.
+ * The resulting vector is a map from old vertices onto new ones, or -1.
  *
+ * @param inputGraph Graph to be transformed.
+ * @param acceptedVertices Set of vertices to be kept.
+ * @return Induced subgraph and the vertex map.
  */
 template<typename T> std::pair<T, std::vector<int>> buildInducedSubGraphTagged(
   const T & inputGraph,
